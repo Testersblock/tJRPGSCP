@@ -150,6 +150,47 @@ body{overflow:hidden}
 }
 </style>
 
+
+<style id="command-rail-polish">
+/* Two-column command layout for phone/tablet screenshots and compact browser widths. */
+@media(max-width:1000px){
+  html,body{min-width:700px;overflow-x:hidden;background:#07090b}
+  .top{flex-wrap:nowrap;gap:7px;padding:9px 12px}
+  .brand{min-width:98px;line-height:1.05}
+  .tabs{padding:8px 10px}
+  .layout{
+    width:100%;
+    height:auto;
+    display:grid;
+    grid-template-columns:minmax(420px,1.58fr) minmax(255px,.92fr);
+    grid-template-rows:auto auto;
+    grid-template-areas:"map rail" "log rail";
+    gap:10px;
+    align-items:start;
+  }
+  .layout>section:nth-child(1){grid-area:map;min-height:0}
+  .layout>section:nth-child(2){grid-area:log;min-height:320px}
+  .layout>section:nth-child(3){grid-area:rail;min-height:0;position:sticky;top:108px;align-self:start}
+  #map{height:590px}
+  .modeBtns{grid-template-columns:1fr 1fr}
+}
+.commandRail{display:flex;flex-direction:column;gap:9px}
+.railBox{border:1px solid #2c3944;background:linear-gradient(180deg,#10181e,#0c1217);border-radius:5px;overflow:hidden}
+.railHead{padding:8px 10px;border-bottom:1px solid #26343e;font-size:12px;font-weight:800;letter-spacing:.8px;color:var(--green);background:#0e171b}
+.railHead.red{color:var(--red);background:#171113}
+.railRows{padding:5px 8px}
+.railRow{display:grid;grid-template-columns:20px 1fr auto;gap:7px;align-items:center;padding:6px 2px;border-bottom:1px solid #ffffff08;font-size:11px}
+.railRow:last-child{border-bottom:0}
+.railIcon{font-size:14px;text-align:center;color:#cbd5dd}.railVal{font-weight:700;color:#f1f5f8}.railGood{color:var(--green)}.railWarn{color:var(--yellow)}.railBad{color:var(--red)}
+.railMeter{grid-column:2/4;height:5px;background:#0a0e11;border-radius:4px;overflow:hidden;margin-top:-2px}.railMeter span{display:block;height:100%;background:linear-gradient(90deg,#61d38e,#66a9ff)}
+.quickGrid{display:grid;grid-template-columns:1fr;gap:4px;padding:7px}.quickGrid button{text-align:left;padding:7px 9px;font-size:10px;display:flex;gap:7px;align-items:center}.quickGrid button span:first-child{width:16px;text-align:center;font-size:13px}
+.alertClear{padding:9px 10px;color:var(--green);font-size:11px}.alertItem{padding:8px 10px;color:#f3c1c1;border-bottom:1px solid #ffffff08;font-size:10px;line-height:1.35}
+.statusLine{display:flex;justify-content:space-between;gap:8px;padding:6px 10px;border-bottom:1px solid #ffffff08;font-size:10px}.statusLine:last-child{border-bottom:0}
+#rightTitle{display:none}
+#right{padding:0;background:transparent}
+.layout>section:nth-child(3){border:0;background:transparent;box-shadow:none}
+</style>
+
 </head>
 <body>
 <div id="title" class="titleScreen">
@@ -1013,6 +1054,75 @@ const UI = {
 
   // Make initial title load buttons safely migrate old saves.
   window.addEventListener('resize',()=>{ if(Game.state&&Game.camera.ready)UI.applyCamera(); });
+})();
+</script>
+
+
+<script id="command-rail-engine">
+(()=>{
+  UI.goTab=function(tab){Game.state.tab=tab;UI.render()};
+  UI.buildPrompt=function(){
+    Game.state.tab='Site';UI.render();UI.centerCurrent();
+    Game.log('Construction mode ready. Tap an empty location on the site grid to choose a room.','info');UI.renderCenter();
+  };
+  const prevRight=UI.renderRight.bind(UI);
+  UI.renderRight=function(){
+    if(Game.state.mode!=='director'){prevRight();return}
+    const s=Game.state,r=s.resources,p=Game.power(),el=document.getElementById('right');
+    const active=s.personnel.filter(x=>x.status==='Active').length;
+    const contained=s.scps.filter(x=>x.contained).length;
+    const avgCond=s.rooms.length?Math.round(s.rooms.reduce((a,x)=>a+x.condition,0)/s.rooms.length):100;
+    const secRooms=s.rooms.filter(x=>DATA.rooms[x.type]?.cat==='Security').length;
+    const security=secRooms>=3?'High':secRooms>=1?'Normal':'Minimal';
+    const integrity=s.breaches.length?'CRITICAL':avgCond<60?'Degraded':'Stable';
+    const comms=Game.hasRoom('Communications')?'Online':'Limited';
+    const powerPct=p.gen?Math.min(100,Math.round(p.used/p.gen*100)):100;
+    const trust=U.clamp(Math.round(r.trust),0,100);
+    const alerts=[];
+    if(s.breaches.length)alerts.push(...s.breaches.map(b=>`BREACH: ${b.scp} is outside containment.`));
+    if(!p.ok)alerts.push('POWER GRID OVER CAPACITY. Containment reliability reduced.');
+    s.rooms.filter(x=>x.condition<45).slice(0,3).forEach(x=>alerts.push(`${x.type} condition critical at ${Math.floor(x.condition)}%.`));
+    if(r.food<30)alerts.push('Food reserves approaching emergency levels.');
+    el.innerHTML=`<div class="commandRail">
+      <div class="railBox"><div class="railHead">SITE OVERVIEW</div><div class="railRows">
+        <div class="railRow"><span class="railIcon">▦</span><span>Rooms</span><span class="railVal">${s.rooms.length} / 300</span></div>
+        <div class="railRow"><span class="railIcon">♙</span><span>Personnel</span><span class="railVal">${active} / ${Math.max(50,active)}</span></div>
+        <div class="railRow"><span class="railIcon">⚗</span><span>SCPs Contained</span><span class="railVal">${contained}</span></div>
+        <div class="railRow"><span class="railIcon">♨</span><span>Breaches</span><span class="railVal ${s.breaches.length?'railBad':'railGood'}">${s.breaches.length}</span></div>
+      </div></div>
+
+      <div class="railBox"><div class="railHead">RESOURCES</div><div class="railRows">
+        <div class="railRow"><span class="railIcon">▣</span><span>Funding</span><span class="railVal">$${U.fmt(r.funding)}</span></div>
+        <div class="railRow"><span class="railIcon">ϟ</span><span>Power</span><span class="railVal">${p.used} / ${p.gen} MW</span><div class="railMeter"><span style="width:${powerPct}%"></span></div></div>
+        <div class="railRow"><span class="railIcon">♟</span><span>Research Points</span><span class="railVal">${Math.floor(r.research)} RP</span></div>
+        <div class="railRow"><span class="railIcon">◇</span><span>Materials</span><span class="railVal">${Math.floor(r.materials)}</span></div>
+        <div class="railRow"><span class="railIcon">✚</span><span>Medical Supplies</span><span class="railVal">${Math.floor(r.medical)}</span></div>
+        <div class="railRow"><span class="railIcon">▥</span><span>Ammunition</span><span class="railVal">${Math.floor(r.ammo)}</span></div>
+        <div class="railRow"><span class="railIcon">▰</span><span>Food</span><span class="railVal">${Math.floor(r.food)}</span></div>
+        <div class="railRow"><span class="railIcon">◆</span><span>Reputation</span><span class="railVal">${Math.floor(r.reputation)}</span></div>
+        <div class="railRow"><span class="railIcon">★</span><span>Foundation Trust</span><span class="railVal">${trust}%</span><div class="railMeter"><span style="width:${trust}%"></span></div></div>
+      </div></div>
+
+      <div class="railBox"><div class="railHead red">ACTIVE ALERTS</div>${alerts.length?alerts.map(a=>`<div class="alertItem">${a}</div>`).join(''):'<div class="alertClear">No active alerts.</div>'}</div>
+
+      <div class="railBox"><div class="railHead">QUICK ACTIONS</div><div class="quickGrid">
+        <button onclick="UI.buildPrompt()"><span>⌁</span><span>Build Room</span></button>
+        <button onclick="UI.goTab('Personnel')"><span>♙</span><span>Manage Personnel</span></button>
+        <button onclick="UI.goTab('SCPs')"><span>☣</span><span>View SCPs</span></button>
+        <button onclick="UI.goTab('Missions')"><span>◎</span><span>Launch Mission</span></button>
+        <button onclick="UI.goTab('Research')"><span>⚗</span><span>Research</span></button>
+        <button onclick="UI.goTab('Construction')"><span>▦</span><span>Site Upgrades</span></button>
+      </div></div>
+
+      <div class="railBox"><div class="railHead">SYSTEM STATUS</div>
+        <div class="statusLine"><span>Power Grid</span><span class="${p.ok?'railGood':'railBad'}">${p.ok?'Stable':'Overloaded'}</span></div>
+        <div class="statusLine"><span>Security Level</span><span class="${security==='Minimal'?'railWarn':'railGood'}">${security}</span></div>
+        <div class="statusLine"><span>Containment Integrity</span><span class="${integrity==='Stable'?'railGood':integrity==='CRITICAL'?'railBad':'railWarn'}">${integrity}</span></div>
+        <div class="statusLine"><span>Site Condition</span><span class="${avgCond>70?'railGood':avgCond>45?'railWarn':'railBad'}">${avgCond}%</span></div>
+        <div class="statusLine"><span>Communications</span><span class="${comms==='Online'?'railGood':'railWarn'}">${comms}</span></div>
+      </div>
+    </div>`;
+  };
 })();
 </script>
 
