@@ -45,6 +45,111 @@ button:hover{background:#202b36} button:disabled{opacity:.4;cursor:not-allowed}
 .hidden{display:none!important}.breachPulse{animation:pulse 1s infinite}@keyframes pulse{50%{box-shadow:0 0 16px #ef686866}}
 @media(max-width:1000px){.layout{grid-template-columns:1fr;height:auto}.panel{min-height:340px}.modeBtns{grid-template-columns:1fr}}
 </style>
+
+<style id="spatial-map-polish">
+:root{
+  --unit:22px;
+  --map-grid:#1b2731;
+  --map-grid-major:#273846;
+  --contain:#b883ff;
+  --security:#ff7070;
+  --research:#65b8ff;
+  --utility:#f2c75c;
+  --personnel:#68d79a;
+  --dclass:#e59a58;
+  --special:#d9e2ea;
+}
+body{overflow:hidden}
+.layout{grid-template-columns:minmax(430px,1.25fr) minmax(380px,1.35fr) minmax(280px,.8fr)}
+.panel{box-shadow:0 8px 28px #0005}
+#map{
+  position:relative;
+  overflow:hidden;
+  padding:0;
+  min-height:0;
+  touch-action:none;
+  user-select:none;
+  cursor:grab;
+  background:#080d12;
+}
+#map.dragging{cursor:grabbing}
+.mapWorld{
+  position:absolute;
+  width:5500px;height:5500px;
+  transform-origin:0 0;
+  background-color:#091016;
+  background-image:
+    linear-gradient(var(--map-grid-major) 1px, transparent 1px),
+    linear-gradient(90deg,var(--map-grid-major) 1px, transparent 1px),
+    linear-gradient(var(--map-grid) 1px, transparent 1px),
+    linear-gradient(90deg,var(--map-grid) 1px, transparent 1px);
+  background-size:110px 110px,110px 110px,22px 22px,22px 22px;
+  box-shadow:inset 0 0 160px #000;
+}
+.mapWorld:before{
+  content:"250 × 250 UNIT SITE PLANE";
+  position:absolute;left:14px;top:10px;color:#5d6c78;font-size:10px;letter-spacing:2px;pointer-events:none;
+}
+.mapRoom{
+  position:absolute;
+  border:1px solid #47545f;
+  border-radius:4px;
+  background:linear-gradient(145deg,#17212a,#0e151b);
+  box-shadow:0 5px 16px #0008,inset 0 0 0 1px #ffffff08;
+  overflow:hidden;
+  cursor:pointer;
+  transition:border-color .15s,filter .15s,box-shadow .15s;
+}
+.mapRoom:hover{filter:brightness(1.15);border-color:#8193a1;z-index:4}
+.mapRoom.playerRoom{box-shadow:0 0 0 2px #fff,0 0 22px #68d79a77}
+.mapRoom.breachPulse{z-index:5}
+.mapRoom .roomTop{display:flex;align-items:center;gap:5px;padding:4px 5px;border-bottom:1px solid #ffffff12;background:#ffffff06}
+.mapRoom .roomDot{width:6px;height:6px;border-radius:50%;flex:none;background:var(--special)}
+.mapRoom.cat-Containment .roomDot{background:var(--contain)}
+.mapRoom.cat-Security .roomDot{background:var(--security)}
+.mapRoom.cat-Research .roomDot{background:var(--research)}
+.mapRoom.cat-Utilities .roomDot{background:var(--utility)}
+.mapRoom.cat-Personnel .roomDot{background:var(--personnel)}
+.mapRoom.cat-D-Class .roomDot{background:var(--dclass)}
+.mapRoom .rn{font-weight:800;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mapRoom .roomBody{padding:4px 5px;font-size:9px;color:#91a2af;line-height:1.45}
+.mapRoom .roomBadge{position:absolute;right:4px;bottom:3px;padding:1px 4px;border-radius:3px;background:#0009;font-size:8px}
+.mapUnknown{
+  position:absolute;border:1px dashed #60707d;background:#101920aa;border-radius:4px;
+  display:flex;align-items:center;justify-content:center;color:#71828f;font-weight:800;font-size:12px;cursor:pointer;
+}
+.mapUnknown:hover{border-color:#a9bac7;color:#c6d2dc}
+.mapConstruction{
+  position:absolute;border:1px dashed var(--yellow);background:#e8c75d14;border-radius:4px;
+  display:flex;align-items:center;justify-content:center;text-align:center;color:#f3d97d;font-size:9px;pointer-events:none;
+}
+.mapCenterMark{position:absolute;width:12px;height:12px;border:1px solid #ffffff28;border-radius:50%;pointer-events:none}
+.mapCenterMark:before,.mapCenterMark:after{content:"";position:absolute;background:#ffffff22}
+.mapCenterMark:before{width:26px;height:1px;left:-8px;top:5px}.mapCenterMark:after{height:26px;width:1px;left:5px;top:-8px}
+.mapHud{position:absolute;z-index:8;left:8px;bottom:8px;display:flex;gap:5px;align-items:center;pointer-events:none}
+.mapHud>*{pointer-events:auto}
+.mapHud .coord{background:#091016dd;border:1px solid #30404d;padding:5px 7px;border-radius:4px;color:#9fb0bd;font-size:10px;min-width:88px}
+.mapHud button{padding:5px 8px}
+.mapLegend{position:absolute;right:8px;top:8px;z-index:8;background:#091016dd;border:1px solid #30404d;border-radius:4px;padding:6px;font-size:9px;color:#90a0ad;pointer-events:none}
+.mapLegend span{margin-right:8px}.mapLegend i{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:3px}
+.roomSize{color:#c0ccd5;font-size:9px}
+.panel h3{background:linear-gradient(90deg,#111923,#0d1217)}
+.card{box-shadow:inset 0 1px #ffffff08}
+.card:hover{border-color:#364653}
+.top{box-shadow:0 3px 20px #0008}
+.titleBox{box-shadow:0 24px 80px #000b}
+#actions button,#leftActions button{min-height:34px}
+.eventHero{padding:12px;border:1px solid #35434f;background:linear-gradient(145deg,#121b23,#0c1217);border-radius:6px;margin-bottom:9px}
+.eventHero.danger{border-color:#803c3c;background:linear-gradient(145deg,#261416,#0d1115)}
+.healthbar{height:8px;background:#080b0e;border:1px solid #26303a;border-radius:5px;overflow:hidden;margin-top:3px}
+.healthbar span{height:100%;display:block;background:linear-gradient(90deg,#5dcf8b,#d2c75b)}
+@media(max-width:1000px){
+ body{overflow:auto}
+ .layout{grid-template-columns:1fr;height:auto}
+ #map{height:520px}
+}
+</style>
+
 </head>
 <body>
 <div id="title" class="titleScreen">
@@ -552,5 +657,364 @@ const UI = {
  close(){document.getElementById('modalWrap').style.display='none'},
 };
 </script>
+
+<script id="spatial-map-engine">
+/* Spatial map engine + UI polish layer.
+   Keeps the original data-driven simulation, replacing only map/state movement code. */
+(() => {
+  const UNIT = 22, WORLD_UNITS = 250, WORLD_PX = UNIT * WORLD_UNITS;
+  const center = 125;
+
+  const footprints = {
+    'Entrance':[4,3],'Administration':[4,3],'Security Room':[4,3],'Basic Armory':[3,3],
+    'Medical Bay':[4,3],'Research Lab':[4,4],'Generator':[4,4],'Storage':[4,3],'Barracks':[5,3],
+    'D-Class Holding':[5,4],'Basic Containment Cell':[4,4],'Reinforced Containment Cell':[5,5],
+    'Humanoid Containment Cell':[4,4],'Biological Containment':[5,4],'Cryogenic Containment':[5,5],
+    'Reality Anchor Chamber':[6,6],'High Security Vault':[5,5],'Heavy Containment Chamber':[7,6],
+    'Security Office':[4,3],Armory:[4,3],Checkpoint:[3,2],'Surveillance Room':[4,4],
+    'Guard Barracks':[5,3],'Response Team Ready Room':[5,4],'Blast Door Control':[3,3],
+    'Automated Defense Center':[6,5],'Biological Lab':[5,4],'Anomalous Materials Lab':[5,4],
+    'Reality Research Lab':[6,5],'Memetics Lab':[5,5],'Experimental Technology Lab':[6,5],
+    'Observation Room':[4,3],'Backup Generator':[4,4],'Power Control':[4,3],Maintenance:[4,3],
+    'Water Treatment':[5,4],'Server Room':[4,4],Communications:[4,3],Cafeteria:[5,4],
+    'Recreation Room':[5,4],'Director Office':[4,3],'D-Class Cafeteria':[5,4],
+    'Testing Chamber':[5,5],'Processing Room':[4,3],'Scranton Reality Anchor Room':[7,6],
+    'Nuclear Warhead Control':[6,5],'Emergency Shelter':[6,5],Incinerator:[5,4],'Isolation Wing':[6,5]
+  };
+  Object.entries(DATA.rooms).forEach(([name,d])=>{ const f=footprints[name]||[4,3]; d.size=f; });
+
+  Game.camera = {x:0,y:0,zoom:1,ready:false};
+  Game.mkRoom = function(type,x,y){
+    const d=DATA.rooms[type], f=d.size||[4,3];
+    return {id:U.id('r'),type,x,y,w:f[0],h:f[1],level:1,condition:100,power:d.power,security:d.sec,occupants:[],scp:null,locked:false};
+  };
+  Game.rectOverlap = function(a,b,pad=0){
+    return a.x < b.x+b.w+pad && a.x+a.w+pad > b.x && a.y < b.y+b.h+pad && a.y+a.h+pad > b.y;
+  };
+  Game.canPlace = function(x,y,w,h,ignoreId=null){
+    if(x<0||y<0||x+w>WORLD_UNITS||y+h>WORLD_UNITS)return false;
+    const box={x,y,w,h};
+    return !this.state.rooms.some(r=>r.id!==ignoreId && this.rectOverlap(box,r,0)) &&
+           !this.state.construction.some(c=>this.rectOverlap(box,{x:c.x,y:c.y,w:c.w,h:c.h},0));
+  };
+  Game.roomAt = function(x,y){ return this.state.rooms.find(r=>x>=r.x&&x<r.x+r.w&&y>=r.y&&y<r.y+r.h); };
+  Game.roomById = function(id){ return this.state.rooms.find(r=>r.id===id); };
+  Game.connectedRooms = function(room){
+    return this.state.rooms.filter(r=>{
+      if(r.id===room.id)return false;
+      const horiz=(r.x===room.x+room.w || r.x+r.w===room.x) && Math.max(r.y,room.y) < Math.min(r.y+r.h,room.y+room.h);
+      const vert=(r.y===room.y+room.h || r.y+r.h===room.y) && Math.max(r.x,room.x) < Math.min(r.x+r.w,room.x+room.w);
+      return horiz||vert;
+    });
+  };
+  Game.ensureSpatial = function(){
+    if(!this.state)return;
+    if(this.state.rooms.every(r=>Number.isFinite(r.x)))return;
+    const offsets=[[0,0],[4,0],[-4,0],[0,4],[0,-4],[8,0],[-8,0],[0,8],[0,-8],[8,4],[-8,4],[8,-4],[-8,-4]];
+    this.state.rooms.forEach((r,i)=>{
+      const f=DATA.rooms[r.type].size||[4,3], o=offsets[i%offsets.length], ring=Math.floor(i/offsets.length)*10;
+      r.w=f[0];r.h=f[1];r.x=Math.max(0,Math.min(249-r.w,center+o[0]+ring));r.y=Math.max(0,Math.min(249-r.h,center+o[1]+ring));
+      delete r.pos;
+    });
+    this.state.construction=[];
+    this.state.breaches=[];
+    if(this.state.break){
+      const rm=this.state.rooms[Math.min(0,this.state.rooms.length-1)]||this.state.rooms[0];
+      this.state.break.roomId=rm?.id||null;this.state.break.explored=rm?[rm.id]:[];
+      delete this.state.break.pos;
+    }
+  };
+
+  Game.newDirector = function(){
+    const s=this.baseState('director');
+    s.rooms=[this.mkRoom('Entrance',center-2,center-1)];
+    s.mapSize=WORLD_UNITS;s.sector=1;
+    s.resources.funding=30000;s.resources.materials=130;s.resources.research=35;
+    ['Researcher','Guard','Engineer','Doctor','Field Agent','D-Class','D-Class'].forEach(r=>s.personnel.push(Gen.person(r)));
+    s.missions=[Gen.incident()];
+    this.state=s;
+    this.log('Site charter approved. Only the surface entrance exists. Build the facility outward from the central access block.','info');
+    this.camera={x:0,y:0,zoom:1,ready:false};this.start();
+  };
+
+  Game.generateBreakSite = function(){
+    const rooms=[];
+    let first=this.mkRoom('Medical Bay',center-2,center-2);rooms.push(first);
+    const pool=Object.keys(DATA.rooms).filter(n=>!['Nuclear Warhead Control','Entrance'].includes(n));
+    const tryAttach=(base,type)=>{
+      const f=DATA.rooms[type].size||[4,3], sides=U.pick([
+        ['E',base.x+base.w,base.y],['W',base.x-f[0],base.y],['S',base.x,base.y+base.h],['N',base.x,base.y-f[1]]
+      ]);
+      const variants=[sides,[sides[0],sides[1],sides[2]+U.r(-2,2)]];
+      for(const v of variants){
+        let x=v[1],y=v[2];
+        x=Math.max(4,Math.min(WORLD_UNITS-f[0]-4,x));y=Math.max(4,Math.min(WORLD_UNITS-f[1]-4,y));
+        const cand={x,y,w:f[0],h:f[1]};
+        if(!rooms.some(r=>this.rectOverlap(cand,r,0))){let rr=this.mkRoom(type,x,y);rooms.push(rr);return rr;}
+      }
+      return null;
+    };
+    let frontier=[first];
+    for(let i=0;i<54;i++){
+      let made=null;
+      for(let t=0;t<30&&!made;t++) made=tryAttach(U.pick(frontier),U.pick(pool));
+      if(made){frontier.push(made);if(frontier.length>18)frontier.shift();}
+    }
+    // ensure an entrance exit exists
+    let edge=rooms.reduce((a,b)=>b.x<a.x?b:a,rooms[0]);
+    let ef=DATA.rooms.Entrance.size||[4,3], ex=Math.max(1,edge.x-ef[0]),ey=edge.y;
+    let ent=this.mkRoom('Entrance',ex,ey);
+    if(!rooms.some(r=>this.rectOverlap(ent,r,0)))rooms.push(ent);
+    else {
+      ent=this.mkRoom('Entrance',edge.x,Math.max(1,edge.y-ef[1]));
+      if(!rooms.some(r=>this.rectOverlap(ent,r,0)))rooms.push(ent);
+    }
+    return {rooms,start:first};
+  };
+
+  Game.newBreak = function(){
+    const s=this.baseState('break'), gen=this.generateBreakSite();
+    s.rooms=gen.rooms;s.mapSize=WORLD_UNITS;
+    const role=U.pick(['D-Class','Researcher','Guard','Engineer','Doctor','Field Agent','Anomalous Humanoid']);
+    s.break={role,roomId:gen.start.id,explored:[gen.start.id],health:100,stamina:100,stress:15,radiation:0,infection:0,bleeding:0,
+      stats:{Strength:U.r(3,8),Agility:U.r(3,8),Intelligence:U.r(3,8),Perception:U.r(3,8),'Technical Skill':U.r(2,8),'Medical Skill':U.r(2,8),Firearms:U.r(2,8),Stealth:U.r(2,8)},
+      inventory:role==='Guard'?['Level 2 Keycard','9mm Pistol','2 Magazines','Radio']:role==='Engineer'?['Level 2 Keycard','Tool Kit','Flashlight']:role==='Doctor'?['Level 2 Keycard','Medkit','Flashlight']:role==='D-Class'?['Level 1 Keycard']:['Level 2 Keycard','Flashlight','Radio'],
+      journal:[],escaped:false};
+    s.scps=[...SCP_PRESETS.slice(0,3).map(x=>({...x,contained:false,roomId:U.pick(s.rooms).id,condition:'BREACHED'})),Gen.scp()];
+    s.scps[3].contained=false;s.scps[3].roomId=U.pick(s.rooms).id;s.scps[3].condition='BREACHED';
+    this.state=s;this.log(`Emergency lights flicker on. Role assignment: ${role}. Somewhere nearby, containment alarms are still screaming.`,'danger');
+    this.camera={x:0,y:0,zoom:1,ready:false};this.start();
+  };
+
+  Game.build = function(x,y,type){
+    const d=DATA.rooms[type],r=this.state.resources,f=d.size||[4,3],w=f[0],h=f[1];
+    if(d.unlock&&!this.hasTech(d.unlock))return;
+    if(!this.canPlace(x,y,w,h)){this.log('Construction footprint overlaps another room or exceeds the site boundary.','warn');return;}
+    const mat=Math.ceil(d.cost/250);
+    if(r.funding<d.cost||r.materials<mat){this.log('Construction cancelled: insufficient funding or materials.','warn');return;}
+    r.funding-=d.cost;r.materials-=mat;this.state.construction.push({x,y,w,h,type,time:U.r(120,300)});
+    this.log(`Construction started: ${type} at [${x}, ${y}] (${w}×${h}).`,'info');UI.close();UI.render();
+  };
+
+  Game.contain = function(scpId,roomId){
+    const scp=this.state.scps.find(x=>x.id===scpId),rm=this.roomById(roomId);if(!scp||!rm||rm.scp)return;
+    rm.scp=scp.id;scp.contained=true;scp.condition='STABLE';scp.roomId=rm.id;this.state.resources.research+=scp.research;
+    this.log(`${scp.id} transferred into ${rm.type}. Initial study produced ${scp.research} RP.`,'good');UI.close();UI.render();
+  };
+
+  Game.containmentCheck = function(){
+    const pwr=this.power();
+    this.state.scps.filter(s=>s.contained).forEach(scp=>{
+      const room=this.state.rooms.find(r=>r.scp===scp.id);if(!room)return;
+      const needOk=room.type===scp.need || (DATA.rooms[room.type].cap||[]).includes(scp.class);
+      let risk=scp.breach+(100-room.condition)/350+(pwr.ok?0:.18)+(needOk?0:.15)-room.level*.015;
+      if(U.chance(Math.max(.01,risk))){
+        scp.contained=false;scp.condition='BREACHED';scp.roomId=room.id;this.state.breaches.push({scp:scp.id,roomId:room.id,turns:0});
+        this.log(`CONTAINMENT FAILURE: ${scp.id} has breached ${room.type}.`,'danger');this.state.speed=0;
+      }else scp.condition=risk>.18?'UNSTABLE':'STABLE';
+    });
+  };
+
+  Game.breachTick = function(){
+    if(!this.state.breaches.length)return;
+    this.state.breaches.forEach(b=>{
+      if(this.state.speed===0)return;
+      if(U.chance(.2*this.state.speed)){
+        b.turns++;const room=this.roomById(b.roomId);if(!room)return;
+        const n=this.connectedRooms(room);if(n.length)b.roomId=U.pick(n).id;
+        const hit=this.roomById(b.roomId);if(!hit)return;
+        const scp=this.state.scps.find(x=>x.id===b.scp);if(scp)scp.roomId=hit.id;
+        hit.condition=U.clamp(hit.condition-U.r(3,15),0,100);
+        if(U.chance(.28)){const victims=this.state.personnel.filter(p=>p.status==='Active'&&p.role!=='D-Class');if(victims.length){let v=U.pick(victims);v.health-=U.r(20,80);v.stress=100;if(v.health<=0){v.status='Dead';this.log(`${v.name} was killed during the breach.`,'danger')}else this.log(`${v.name} was injured during the breach.`,'warn')}}
+        if(hit.scp&&U.chance(.2)){let other=this.state.scps.find(x=>x.id===hit.scp&&x.contained);if(other){other.contained=false;other.condition='BREACHED';other.roomId=hit.id;this.state.breaches.push({scp:other.id,roomId:hit.id,turns:0});this.log(`CASCADING BREACH: ${other.id} has escaped.`,'danger')}}
+      }
+    });
+  };
+
+  Game.respondBreach = function(id,action){
+    const b=this.state.breaches.find(x=>x.scp===id),scp=this.state.scps.find(x=>x.id===id);if(!b)return;
+    let score=35+this.state.personnel.filter(p=>['Guard','MTF Soldier'].includes(p.role)&&p.status==='Active').length*4;
+    if(action==='mtf')score+=this.state.mtf['Epsilon-11'].alive*8;if(action==='lock')score+=this.hasTech('Automated Lockdown')?18:6;
+    if(action==='gas')score+=8;if(action==='power')score+=scp.effect.includes('Electromagnetic')?15:-5;score-=scp.threat*9;
+    if(U.r(1,100)<score){
+      let room=this.state.rooms.find(r=>r.type===scp.need&&!r.scp)||this.state.rooms.find(r=>(DATA.rooms[r.type].cap||[]).includes(scp.class)&&!r.scp);
+      if(room){scp.contained=true;scp.condition='STABLE';scp.roomId=room.id;room.scp=scp.id;this.state.breaches=this.state.breaches.filter(x=>x!==b);this.log(`${scp.id} recontained in ${room.type}.`,'good')}
+      else this.log(`${scp.id} is pinned down, but no compatible empty chamber exists.`,'warn');
+    }else this.log(`Response teams fail to contain ${scp.id}. The anomaly remains mobile.`,'danger');
+    UI.render();
+  };
+
+  Game.moveBreakTo = function(roomId){
+    const b=this.state.break,cur=this.roomById(b.roomId),next=this.roomById(roomId);if(!cur||!next)return;
+    if(!this.connectedRooms(cur).some(r=>r.id===next.id)){this.log('There is no direct route from here.','warn');return;}
+    b.roomId=next.id;if(!b.explored.includes(next.id))b.explored.push(next.id);
+    b.stamina=U.clamp(b.stamina-6,0,100);b.stress=U.clamp(b.stress+U.r(0,4),0,100);
+    this.log(`You move into ${next.type}.`,'info');this.encounterBreak();UI.render();UI.centerCurrent();
+  };
+  Game.encounterBreak = function(){
+    const b=this.state.break,hazard=this.state.scps.find(s=>!s.contained&&s.roomId===b.roomId);
+    if(hazard){this.log(`${hazard.id} is here. ${hazard.desc}`,'danger');b.stress=U.clamp(b.stress+18,0,100)}
+    else if(U.chance(.26)){let loot=U.pick(['Medkit','Flashlight','Level 2 Keycard','Level 3 Keycard','9mm Pistol','Magazine','Radio','Tool Kit']);if(!b.inventory.includes(loot)||loot==='Magazine'){if(b.inventory.length<12)b.inventory.push(loot);this.log(`Search teams missed something useful: ${loot}.`,'good')}}
+  };
+  Game.moveHazards = function(){
+    this.state.scps.filter(s=>!s.contained).forEach(s=>{
+      const room=this.roomById(s.roomId);if(!room)return;const n=this.connectedRooms(room);if(n.length)s.roomId=U.pick(n).id;
+      if(s.roomId===this.state.break.roomId){let dmg=U.r(12,35);this.state.break.health-=dmg;this.state.break.stress=U.clamp(this.state.break.stress+25,0,100);this.log(`${s.id} enters your room. You take ${dmg} damage while scrambling away from it.`,'danger')}
+    });
+  };
+  Game.breakAction = function(a){
+    let b=this.state.break,room=this.roomById(b.roomId);
+    if(a==='search'){b.stamina=U.clamp(b.stamina-5,0,100);this.encounterBreak()}
+    if(a==='hide'){b.stamina=U.clamp(b.stamina-3,0,100);let stealth=b.stats.Stealth*8+U.r(1,50);if(stealth>55){this.log('You find a defensible hiding place and get your breathing under control.','good');b.stress=U.clamp(b.stress-8,0,100)}else this.log('The room offers little cover.','warn')}
+    if(a==='repair'){if(b.inventory.includes('Tool Kit')||b.role==='Engineer'){room.condition=U.clamp(room.condition+30,0,100);this.log(`${room.type} systems partially restored.`,'good')}else this.log('You lack the tools to perform repairs.','warn')}
+    if(a==='medkit'){let i=b.inventory.indexOf('Medkit');if(i>=0){b.inventory.splice(i,1);b.health=U.clamp(b.health+45,0,100);b.bleeding=0;this.log('You use the medkit.','good')}}
+    if(a==='escape'){if(room.type==='Entrance'){b.escaped=true;this.state.speed=0;this.log('You force your way through the surface checkpoint and escape the site alive.','good')}else this.log('This room has no surface exit.','warn')}
+    UI.render();
+  };
+
+  const oldDaily = Game.directorTick.bind(Game);
+  Game.directorTick = function(mins){
+    const s=this.state,r=s.resources;
+    let labs=s.rooms.filter(x=>x.type.includes('Lab')&&x.condition>40).length;r.research+=labs*.018*mins;
+    let engineers=s.personnel.filter(p=>p.role==='Engineer'&&p.status==='Active').length;
+    if(engineers&&U.chance(.03*s.speed)){let damaged=s.rooms.filter(x=>x.condition<100);if(damaged.length){let rm=U.pick(damaged);rm.condition=U.clamp(rm.condition+engineers*.35,0,100)}}
+    s.construction.forEach(c=>c.time-=mins);let done=s.construction.filter(c=>c.time<=0);
+    done.forEach(c=>{s.rooms.push(this.mkRoom(c.type,c.x,c.y));this.log(`${c.type} construction completed at [${c.x}, ${c.y}].`,'good')});s.construction=s.construction.filter(c=>c.time>0);
+    if(U.chance(.03*s.speed))this.containmentCheck();
+    if(U.chance(.025*s.speed)&&s.rooms.length){let rm=U.pick(s.rooms);rm.condition=U.clamp(rm.condition-U.r(1,5),0,100);if(rm.condition<45)this.log(`${rm.type} condition has fallen to ${Math.floor(rm.condition)}%.`,'warn')}
+    this.breachTick();
+  };
+
+  const oldStart=Game.start.bind(Game);
+  Game.start=function(){this.ensureSpatial();oldStart();setTimeout(()=>UI.centerCurrent(true),20)};
+  const oldLoad=Game.load.bind(Game), oldLoadSlot=Game.loadSlot.bind(Game);
+  Game.load=function(){let x=localStorage.getItem('scp_site_autosave');if(!x)return alert('No autosave found.');this.state=JSON.parse(x);this.ensureSpatial();this.camera={x:0,y:0,zoom:1,ready:false};this.start()};
+  Game.loadSlot=function(){let x=localStorage.getItem('scp_site_slot1');if(!x)return alert('No Slot 1 save found.');this.state=JSON.parse(x);this.ensureSpatial();this.camera={x:0,y:0,zoom:1,ready:false};this.start()};
+
+  UI.centerCurrent=function(force=false){
+    const map=document.getElementById('map'),world=document.getElementById('mapWorld');if(!map||!world)return;
+    let room=Game.state.mode==='break'?Game.roomById(Game.state.break.roomId):Game.state.rooms[0];if(!room)return;
+    const z=Game.camera.zoom||1;
+    Game.camera.x=map.clientWidth/2-(room.x+room.w/2)*UNIT*z;
+    Game.camera.y=map.clientHeight/2-(room.y+room.h/2)*UNIT*z;
+    Game.camera.ready=true;this.applyCamera();
+  };
+  UI.applyCamera=function(){
+    const w=document.getElementById('mapWorld');if(!w)return;
+    w.style.transform=`translate(${Game.camera.x}px,${Game.camera.y}px) scale(${Game.camera.zoom})`;
+  };
+  UI.mapCoordFromEvent=function(e){
+    const map=document.getElementById('map'),rect=map.getBoundingClientRect(),z=Game.camera.zoom||1;
+    const px=(e.clientX-rect.left-Game.camera.x)/z,py=(e.clientY-rect.top-Game.camera.y)/z;
+    return {x:Math.floor(px/UNIT),y:Math.floor(py/UNIT)};
+  };
+  UI.zoomMap=function(delta){
+    const map=document.getElementById('map');if(!map)return;
+    const old=Game.camera.zoom,n=U.clamp(old+delta,.55,1.45),cx=map.clientWidth/2,cy=map.clientHeight/2;
+    const wx=(cx-Game.camera.x)/old,wy=(cy-Game.camera.y)/old;
+    Game.camera.zoom=n;Game.camera.x=cx-wx*n;Game.camera.y=cy-wy*n;this.applyCamera();
+  };
+  UI.bindMapControls=function(){
+    const map=document.getElementById('map'),world=document.getElementById('mapWorld');if(!map||!world)return;
+    let drag=false,moved=false,sx=0,sy=0,cx=0,cy=0;
+    map.onpointerdown=e=>{if(e.button!==undefined&&e.button!==0)return;drag=true;moved=false;sx=e.clientX;sy=e.clientY;cx=Game.camera.x;cy=Game.camera.y;map.setPointerCapture?.(e.pointerId);map.classList.add('dragging')};
+    map.onpointermove=e=>{
+      const c=this.mapCoordFromEvent(e),hud=document.getElementById('coordHud');if(hud)hud.textContent=`X ${U.clamp(c.x,0,249)}  Y ${U.clamp(c.y,0,249)}`;
+      if(!drag)return;let dx=e.clientX-sx,dy=e.clientY-sy;if(Math.abs(dx)+Math.abs(dy)>5)moved=true;Game.camera.x=cx+dx;Game.camera.y=cy+dy;this.applyCamera();
+    };
+    map.onpointerup=e=>{map.classList.remove('dragging');if(drag&&!moved&&Game.state.mode==='director'&&e.target===world){const c=this.mapCoordFromEvent(e);if(c.x>=0&&c.y>=0&&c.x<250&&c.y<250)this.construct(c.x,c.y)}drag=false};
+    map.onpointercancel=()=>{drag=false;map.classList.remove('dragging')};
+    map.onwheel=e=>{e.preventDefault();this.zoomMap(e.deltaY<0?.1:-.1)},{passive:false};
+  };
+
+  UI.renderMap=function(){
+    Game.ensureSpatial();
+    const s=Game.state,map=document.getElementById('map');map.innerHTML='';document.getElementById('leftTitle').textContent=s.mode==='director'?'SITE PLAN // 250×250':'LOCAL SITE MAP';
+    const world=document.createElement('div');world.id='mapWorld';world.className='mapWorld';map.appendChild(world);
+    const cm=document.createElement('div');cm.className='mapCenterMark';cm.style.left=(center*UNIT-6)+'px';cm.style.top=(center*UNIT-6)+'px';world.appendChild(cm);
+
+    const visibleRooms = s.mode==='director'?s.rooms:s.rooms.filter(r=>{
+      const b=s.break;if(b.explored.includes(r.id))return true;
+      return b.explored.some(id=>{const ex=Game.roomById(id);return ex&&Game.connectedRooms(ex).some(n=>n.id===r.id)});
+    });
+    visibleRooms.forEach(r=>{
+      const explored=s.mode==='director'||s.break.explored.includes(r.id);
+      const d=DATA.rooms[r.type],div=document.createElement('div');
+      div.style.left=(r.x*UNIT)+'px';div.style.top=(r.y*UNIT)+'px';div.style.width=(r.w*UNIT)+'px';div.style.height=(r.h*UNIT)+'px';
+      if(!explored){
+        div.className='mapUnknown';div.textContent='???';div.onclick=e=>{e.stopPropagation();Game.moveBreakTo(r.id)};world.appendChild(div);return;
+      }
+      const breach=s.breaches.some(b=>b.roomId===r.id),player=s.mode==='break'&&s.break.roomId===r.id;
+      div.className=`mapRoom cat-${d.cat.replace(' ','-')} ${breach?'breachPulse':''} ${player?'playerRoom':''}`;
+      const pwr=d.power,occ=r.scp?r.scp:(player?'YOU':'');
+      div.innerHTML=`<div class="roomTop"><span class="roomDot"></span><div class="rn">${r.type}</div></div>
+      <div class="roomBody">LV ${r.level} · COND ${Math.floor(r.condition)}%<br>SEC ${r.security} · PWR ${pwr<0?'+'+(-pwr):'-'+pwr}<br><span class="roomSize">${r.w}×${r.h} units</span></div>${occ?`<div class="roomBadge">${occ}</div>`:''}`;
+      div.onclick=e=>{e.stopPropagation();if(s.mode==='director')this.room(r.id);else if(r.id!==s.break.roomId)Game.moveBreakTo(r.id)};
+      world.appendChild(div);
+    });
+    s.construction.forEach(c=>{let d=document.createElement('div');d.className='mapConstruction';d.style.left=c.x*UNIT+'px';d.style.top=c.y*UNIT+'px';d.style.width=c.w*UNIT+'px';d.style.height=c.h*UNIT+'px';d.innerHTML=`BUILDING<br>${c.type}`;world.appendChild(d)});
+
+    const hud=document.createElement('div');hud.className='mapHud';hud.innerHTML=`<div class="coord" id="coordHud">X 125  Y 125</div><button onclick="UI.centerCurrent()">Center</button><button onclick="UI.zoomMap(.1)">＋</button><button onclick="UI.zoomMap(-.1)">－</button>`;map.appendChild(hud);
+    if(s.mode==='director'){const l=document.createElement('div');l.className='mapLegend';l.innerHTML='<span><i style="background:var(--contain)"></i>Contain</span><span><i style="background:var(--security)"></i>Security</span><span><i style="background:var(--research)"></i>Research</span><span><i style="background:var(--utility)"></i>Utility</span>';map.appendChild(l)}
+    this.bindMapControls();
+    if(!Game.camera.ready)setTimeout(()=>this.centerCurrent(true),0);else this.applyCamera();
+
+    const la=document.getElementById('leftActions');la.innerHTML='';
+    if(s.mode==='director')la.innerHTML='<button onclick="UI.centerCurrent()">Recenter Site</button><button onclick="UI.expand()">Authorize New Sector</button><span class="small">Drag the map to pan. Click empty grid space to build.</span>';
+    else{
+      const cur=Game.roomById(s.break.roomId),adj=cur?Game.connectedRooms(cur):[];
+      la.innerHTML=adj.map(r=>`<button onclick="Game.moveBreakTo('${r.id}')">${s.break.explored.includes(r.id)?'Move: '+r.type:'Enter: ???'}</button>`).join('')||'<span class="small">No intact adjoining route.</span>';
+    }
+  };
+
+  UI.construct=function(x,y){
+    const cats={};Object.entries(DATA.rooms).forEach(([n,d])=>{if(d.cost<=0)return;if(d.unlock&&!Game.hasTech(d.unlock))return;(cats[d.cat]??=[]).push(n)});
+    let html=`<h2>Construct at [${x}, ${y}]</h2><div class="eventHero"><b>Placement anchor:</b> upper-left grid coordinate.<br><span class="small">Rooms have physical footprints now, so concrete finally occupies space. Revolutionary.</span></div>`;
+    Object.entries(cats).forEach(([cat,arr])=>{html+=`<h3>${cat}</h3><div class="grid2">`;arr.forEach(n=>{let d=DATA.rooms[n],f=d.size||[4,3];let can=Game.canPlace(x,y,f[0],f[1]);html+=`<button class="choice" ${can?'':'disabled'} onclick="Game.build(${x},${y},'${n.replaceAll("'","\\'")}')"><b>${n}</b><br><span class="small">${f[0]}×${f[1]} units · $${U.fmt(d.cost)} · ${Math.ceil(d.cost/250)} materials · PWR ${d.power}</span></button>`});html+='</div>'});this.open(html);
+  };
+
+  UI.room=function(id){
+    const r=Game.roomById(id),d=DATA.rooms[r.type],scp=Game.state.scps.find(x=>x.id===r.scp);
+    this.open(`<h2>${r.type}</h2><div class="eventHero"><b>GRID [${r.x}, ${r.y}]</b> · ${r.w}×${r.h} units</div>
+    <div class="grid2"><div class="card">Level <b>${r.level}</b><br>Condition <b>${Math.floor(r.condition)}%</b><br>Security <b>${r.security}</b></div>
+    <div class="card">Base power <b>${d.power}</b><br>Category <b>${d.cat}</b><br>Occupant <b>${scp?scp.id:'None'}</b></div></div><p>${d.desc}</p>
+    <button onclick="Game.upgradeRoom('${r.id}')">Upgrade Room</button> <button onclick="UI.close()">Close</button>`);
+  };
+
+  const oldRenderRight=UI.renderRight.bind(UI);
+  UI.renderRight=function(){
+    oldRenderRight();
+    if(Game.state.mode==='break'){
+      const b=Game.state.break,room=Game.roomById(b.roomId),el=document.getElementById('right');
+      el.innerHTML=`<div class="statGrid">${[['Health',b.health],['Stamina',b.stamina],['Stress',b.stress],['Radiation',b.radiation],['Infection',b.infection],['Bleeding',b.bleeding]].map(x=>`<div class="stat"><span class="small">${x[0]}</span><b>${Math.max(0,Math.floor(x[1]))}</b><div class="healthbar"><span style="width:${U.clamp(x[1],0,100)}%"></span></div></div>`).join('')}</div>
+      <div class="card" style="margin-top:8px"><h4>${b.role}</h4><div class="small">Current room</div><b>${room?.type||'Unknown'}</b><br><span class="small">Grid [${room?.x??'?'}, ${room?.y??'?'}]</span></div>
+      <div class="card"><h4>Immediate Routes</h4>${room?Game.connectedRooms(room).map(r=>`<div class="small">${b.explored.includes(r.id)?r.type:'UNEXPLORED'}</div>`).join(''):'None'}</div>`;
+    }
+  };
+
+  const oldRenderCenter=UI.renderCenter.bind(UI);
+  UI.renderCenter=function(){
+    oldRenderCenter();
+    if(Game.state.mode==='break'&&Game.state.tab==='Map'){
+      const el=document.getElementById('center'),b=Game.state.break,room=Game.roomById(b.roomId);
+      if(el.firstChild){
+        const hero=document.createElement('div');hero.className='eventHero '+(Game.state.scps.some(s=>!s.contained&&s.roomId===b.roomId)?'danger':'');
+        hero.innerHTML=`<b>${room?.type||'UNKNOWN ROOM'}</b><br><span class="small">Condition ${Math.floor(room?.condition||0)}% · ${Game.connectedRooms(room||{id:''}).length} adjoining route(s) · ${b.explored.length}/${Game.state.rooms.length} rooms explored</span>`;
+        el.insertBefore(hero,el.firstChild);
+      }
+    }
+  };
+
+  const oldConstruction=UI.construction.bind(UI);
+  UI.construction=function(el){
+    const active=Game.state.construction;if(!active.length){el.innerHTML='<div class="small">No active construction projects.</div>';return}
+    active.forEach(c=>el.innerHTML+=`<div class="card"><h4>${c.type}</h4><div>Grid [${c.x}, ${c.y}] · ${c.w}×${c.h} units</div><div class="small">${Math.ceil(c.time)} in-game minutes remaining</div></div>`);
+  };
+
+  // Make initial title load buttons safely migrate old saves.
+  window.addEventListener('resize',()=>{ if(Game.state&&Game.camera.ready)UI.applyCamera(); });
+})();
+</script>
+
 </body>
 </html>
