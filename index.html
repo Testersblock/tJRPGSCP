@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SCP Site Command</title>
+<style>
+:root{
+  --bg:#07090b;--panel:#101419;--panel2:#151b22;--line:#2a333d;--text:#dbe2e9;--muted:#8d9aa7;
+  --green:#54d68b;--yellow:#e8c75d;--red:#ef6868;--blue:#67a9ff;--purple:#b28cff;--orange:#ef9d55;
+}
+*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 20% 0%,#111821,#07090b 40%);color:var(--text);font-family:Consolas,Monaco,monospace;min-height:100vh}
+button,select,input{font:inherit} button{background:#182029;color:var(--text);border:1px solid #34404c;padding:8px 10px;border-radius:5px;cursor:pointer}
+button:hover{background:#202b36} button:disabled{opacity:.4;cursor:not-allowed}
+.top{display:flex;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);background:#0a0e12;position:sticky;top:0;z-index:5}
+.brand{font-weight:800;letter-spacing:2px;color:#fff}.modeTag{padding:3px 8px;border:1px solid var(--line);color:var(--green);border-radius:4px;font-size:12px}
+.speed{margin-left:auto;display:flex;gap:4px}.speed button.active{border-color:var(--green);color:var(--green)}
+.tabs{display:flex;gap:4px;padding:8px 10px;background:#0c1116;border-bottom:1px solid var(--line);overflow:auto}
+.tabs button.active{background:#24313d;border-color:#5c7084}
+.layout{display:grid;grid-template-columns:minmax(340px,1.1fr) minmax(360px,1.4fr) minmax(280px,.9fr);gap:10px;padding:10px;height:calc(100vh - 102px)}
+.panel{background:linear-gradient(#11171d,#0d1217);border:1px solid var(--line);border-radius:7px;min-height:0;display:flex;flex-direction:column}
+.panel h3{margin:0;padding:10px 12px;border-bottom:1px solid var(--line);font-size:14px;letter-spacing:1px}
+.content{padding:10px;overflow:auto;min-height:0}
+#map{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;align-content:start}
+.room{min-height:92px;border:1px solid #34404c;background:#121920;border-radius:5px;padding:6px;position:relative;cursor:pointer}
+.room:hover{border-color:#6b7f91}.room.empty{background:#0b0f13;border-style:dashed;color:#56616c;display:flex;align-items:center;justify-content:center}
+.room .rn{font-weight:700;font-size:12px;color:#e9eef4}.room .meta{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.35}
+.room.bad{border-color:var(--red)} .room.warn{border-color:var(--yellow)} .room.ok{border-color:#2c7650}
+.room .occ{position:absolute;bottom:5px;right:5px;font-size:9px;color:#9fb0bf}
+#log{display:flex;flex-direction:column;gap:6px}
+.log{padding:7px 8px;border-left:3px solid #52606c;background:#10161c;font-size:12px;line-height:1.35}
+.log.info{border-color:var(--blue)} .log.good{border-color:var(--green)} .log.warn{border-color:var(--yellow)} .log.danger{border-color:var(--red)}
+.small{font-size:11px;color:var(--muted)} .statGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.stat{background:#10161c;border:1px solid #27313a;padding:7px;border-radius:4px}.stat b{display:block;color:#fff;font-size:13px}
+.card{border:1px solid #29343f;background:#10161c;padding:9px;border-radius:5px;margin-bottom:7px}
+.card h4{margin:0 0 5px}.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.grow{flex:1}
+.actions{padding:8px;border-top:1px solid var(--line);display:flex;gap:6px;flex-wrap:wrap;background:#0d1217}
+.badge{font-size:10px;padding:2px 5px;border:1px solid #384652;border-radius:3px;color:#aebac5}.safe{color:var(--green)}.euclid{color:var(--yellow)}.keter{color:var(--red)}.thaumiel{color:var(--purple)}
+.progress{height:7px;background:#080b0e;border:1px solid #26303a;border-radius:4px;overflow:hidden}.progress span{display:block;height:100%;background:#6fa8dc}
+.modalWrap{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:20}.modal{width:min(760px,92vw);max-height:86vh;overflow:auto;background:#10161d;border:1px solid #465463;border-radius:8px;padding:14px}.modal h2{margin-top:0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.choice{display:block;width:100%;text-align:left;margin:6px 0;padding:10px}
+.titleScreen{position:fixed;inset:0;background:radial-gradient(circle at center,#15202a,#06080a 60%);display:flex;align-items:center;justify-content:center;z-index:50}
+.titleBox{width:min(760px,94vw);text-align:center;padding:30px;border:1px solid #354453;background:#0c1117eF;border-radius:10px}
+.titleBox h1{font-size:36px;letter-spacing:5px;margin:0 0 10px}.modeBtns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}.modeCard{padding:18px;border:1px solid #354453;background:#121922;cursor:pointer;border-radius:7px}.modeCard:hover{border-color:#7f93a6}.modeCard h2{margin:0 0 6px}
+.hidden{display:none!important}.breachPulse{animation:pulse 1s infinite}@keyframes pulse{50%{box-shadow:0 0 16px #ef686866}}
+@media(max-width:1000px){.layout{grid-template-columns:1fr;height:auto}.panel{min-height:340px}.modeBtns{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="title" class="titleScreen">
+  <div class="titleBox">
+    <div class="small">FOUNDATION INTERNAL SIMULATION // BUILD 0.9</div>
+    <h1>SITE COMMAND</h1>
+    <p>Manage a growing Foundation facility, capture anomalies, research dangerous technology, or wake up during the inevitable moment when everything goes catastrophically wrong.</p>
+    <div class="modeBtns">
+      <div class="modeCard" onclick="Game.newDirector()"><h2>Site Director</h2><div class="small">Build, research, dispatch, contain, survive.</div></div>
+      <div class="modeCard" onclick="Game.newBreak()"><h2>Containment Break</h2><div class="small">Explore, loot, repair, evade, escape.</div></div>
+    </div>
+    <div class="row" style="justify-content:center;margin-top:14px">
+      <button onclick="Game.load()">Load Autosave</button>
+      <button onclick="Game.loadSlot()">Load Slot 1</button>
+    </div>
+  </div>
+</div>
+
+<div class="top">
+  <div class="brand">SCP // SITE COMMAND</div>
+  <div id="modeTag" class="modeTag"></div>
+  <div id="clock" class="small"></div>
+  <div class="speed" id="speedBtns">
+    <button onclick="Game.speed(0)">II</button><button onclick="Game.speed(1)">1x</button><button onclick="Game.speed(2)">2x</button><button onclick="Game.speed(4)">4x</button>
+  </div>
+  <button onclick="Game.save()">Save</button>
+  <button onclick="Game.saveSlot()">Slot 1</button>
+  <button onclick="Game.returnTitle()">Menu</button>
+</div>
+<div id="tabs" class="tabs"></div>
+<div class="layout">
+  <section class="panel"><h3 id="leftTitle">SITE MAP</h3><div class="content" id="map"></div><div class="actions" id="leftActions"></div></section>
+  <section class="panel"><h3 id="centerTitle">EVENT LOG</h3><div class="content" id="center"></div><div class="actions" id="actions"></div></section>
+  <section class="panel"><h3 id="rightTitle">STATUS</h3><div class="content" id="right"></div></section>
+</div>
+<div id="modalWrap" class="modalWrap" onclick="if(event.target===this)UI.close()"><div id="modal" class="modal"></div></div>
+
+<script>
+const U = {
+  clamp:(n,a,b)=>Math.max(a,Math.min(b,n)),
+  r:(a,b)=>Math.floor(Math.random()*(b-a+1))+a,
+  pick:a=>a[Math.floor(Math.random()*a.length)],
+  chance:p=>Math.random()<p,
+  id:(p='id')=>p+'_'+Math.random().toString(36).slice(2,8),
+  fmt:n=>Math.floor(n).toLocaleString()
+};
+
+const DATA = {
+rooms:{
+ Entrance:{cat:'Personnel',cost:0,power:1,sec:1,desc:'Surface access and controlled entry.'},
+ Administration:{cat:'Personnel',cost:1200,power:2,sec:1,desc:'Staff coordination and Foundation bureaucracy.'},
+ 'Security Room':{cat:'Security',cost:1600,power:4,sec:2,desc:'Cameras, dispatch and lockdown controls.'},
+ 'Basic Armory':{cat:'Security',cost:1400,power:1,sec:2,desc:'Weapons and ammunition storage.'},
+ 'Medical Bay':{cat:'Personnel',cost:1800,power:4,sec:1,desc:'Trauma care and staff recovery.'},
+ 'Research Lab':{cat:'Research',cost:2200,power:6,sec:1,desc:'General anomalous research.'},
+ Generator:{cat:'Utilities',cost:2500,power:-40,sec:1,desc:'Primary electrical generation.'},
+ Storage:{cat:'Utilities',cost:1100,power:1,sec:1,desc:'Materials and supply stockpile.'},
+ Barracks:{cat:'Personnel',cost:1500,power:2,sec:1,desc:'Personnel housing.'},
+ 'D-Class Holding':{cat:'D-Class',cost:1700,power:3,sec:2,desc:'Secure low-clearance detention.'},
+ 'Basic Containment Cell':{cat:'Containment',cost:2000,power:6,sec:1,cap:['Safe','Euclid'],desc:'General low-risk anomaly cell.'},
+ 'Reinforced Containment Cell':{cat:'Containment',cost:4000,power:10,sec:2,cap:['Safe','Euclid','Keter'],unlock:'Reinforced Cells',desc:'Hardened containment for dangerous anomalies.'},
+ 'Humanoid Containment Cell':{cat:'Containment',cost:3200,power:7,sec:2,cap:['Safe','Euclid','Keter'],desc:'Secure humanoid accommodations.'},
+ 'Biological Containment':{cat:'Containment',cost:3900,power:10,sec:2,cap:['Safe','Euclid','Keter'],unlock:'Chemical Protection',desc:'Sealed biohazard isolation.'},
+ 'Cryogenic Containment':{cat:'Containment',cost:5200,power:18,sec:3,cap:['Euclid','Keter'],unlock:'Cryogenic Systems',desc:'Extreme low temperature suppression.'},
+ 'Reality Anchor Chamber':{cat:'Containment',cost:7500,power:24,sec:4,cap:['Euclid','Keter','Thaumiel'],unlock:'Reality Anchors',desc:'Reality-stabilized high-risk chamber.'},
+ 'High Security Vault':{cat:'Containment',cost:6800,power:10,sec:4,cap:['Safe','Euclid','Keter'],unlock:'Automated Lockdown',desc:'Vault for dangerous anomalous objects.'},
+ 'Heavy Containment Chamber':{cat:'Containment',cost:9000,power:20,sec:4,cap:['Euclid','Keter'],unlock:'Reinforced Cells',desc:'Deep hardened containment.'},
+ 'Security Office':{cat:'Security',cost:1800,power:3,sec:2,desc:'Local security command.'},
+ Armory:{cat:'Security',cost:2200,power:2,sec:2,desc:'Expanded weapons stockpile.'},
+ Checkpoint:{cat:'Security',cost:1500,power:3,sec:3,desc:'Fortified controlled passage.'},
+ 'Surveillance Room':{cat:'Security',cost:2600,power:7,sec:2,unlock:'Improved Cameras',desc:'Advanced surveillance network.'},
+ 'Guard Barracks':{cat:'Security',cost:2200,power:3,sec:2,desc:'Dedicated guard housing.'},
+ 'Response Team Ready Room':{cat:'Security',cost:4200,power:5,sec:3,unlock:'Advanced MTF Equipment',desc:'Rapid deployment center.'},
+ 'Blast Door Control':{cat:'Security',cost:3600,power:8,sec:4,unlock:'Automated Lockdown',desc:'Sector blast door controls.'},
+ 'Automated Defense Center':{cat:'Security',cost:6500,power:15,sec:4,unlock:'Automated Turrets',desc:'Remote automated defense.'},
+ 'Biological Lab':{cat:'Research',cost:3000,power:8,sec:2,desc:'Biological anomaly research.'},
+ 'Anomalous Materials Lab':{cat:'Research',cost:3600,power:9,sec:2,desc:'Anomalous materials analysis.'},
+ 'Reality Research Lab':{cat:'Research',cost:5200,power:15,sec:3,unlock:'Reality Anchors',desc:'Reality-bending phenomena analysis.'},
+ 'Memetics Lab':{cat:'Research',cost:5200,power:12,sec:3,unlock:'Memetic Screening',desc:'Cognitohazard and memetic analysis.'},
+ 'Experimental Technology Lab':{cat:'Research',cost:6000,power:14,sec:3,unlock:'Experimental Energy Weapons',desc:'Dangerous prototype development.'},
+ 'Observation Room':{cat:'Research',cost:1800,power:4,sec:2,desc:'Remote testing observation.'},
+ 'Backup Generator':{cat:'Utilities',cost:3300,power:-25,sec:1,unlock:'Grid Redundancy',desc:'Emergency power generation.'},
+ 'Power Control':{cat:'Utilities',cost:2400,power:3,sec:2,desc:'Distribution and load balancing.'},
+ Maintenance:{cat:'Utilities',cost:1800,power:2,sec:1,desc:'Repairs and site condition support.'},
+ 'Water Treatment':{cat:'Utilities',cost:2000,power:4,sec:1,desc:'Water and sanitation.'},
+ 'Server Room':{cat:'Utilities',cost:2600,power:8,sec:2,desc:'Site computing systems.'},
+ Communications:{cat:'Utilities',cost:2200,power:5,sec:2,desc:'Long-range secure communications.'},
+ Cafeteria:{cat:'Personnel',cost:1600,power:3,sec:1,desc:'Food service and morale.'},
+ 'Recreation Room':{cat:'Personnel',cost:1800,power:3,sec:1,desc:'Stress reduction.'},
+ 'Director Office':{cat:'Personnel',cost:2600,power:2,sec:3,desc:'Director command office.'},
+ 'D-Class Cafeteria':{cat:'D-Class',cost:1400,power:2,sec:1,desc:'Controlled D-Class feeding.'},
+ 'Testing Chamber':{cat:'D-Class',cost:2600,power:6,sec:3,desc:'Controlled anomaly testing.'},
+ 'Processing Room':{cat:'D-Class',cost:1800,power:3,sec:2,desc:'D-Class intake and assignment.'},
+ 'Scranton Reality Anchor Room':{cat:'Special',cost:9000,power:30,sec:4,unlock:'Reality Anchors',desc:'Dedicated Scranton Reality Anchor array.'},
+ 'Nuclear Warhead Control':{cat:'Special',cost:12000,power:5,sec:5,unlock:'Omega Warhead Protocol',desc:'Last-resort site denial system.'},
+ 'Emergency Shelter':{cat:'Special',cost:4200,power:4,sec:3,desc:'Protected evacuation shelter.'},
+ Incinerator:{cat:'Special',cost:3500,power:8,sec:2,desc:'Hazardous waste destruction.'},
+ 'Isolation Wing':{cat:'Special',cost:5200,power:8,sec:4,desc:'Quarantine and isolation.'}
+},
+tech:{
+ 'Improved Cameras':{cat:'Security',cost:35,req:[],desc:'Better detection and lower breach response delay.'},
+ 'Automated Lockdown':{cat:'Security',cost:70,req:['Improved Cameras'],desc:'Automatic sector lockdowns and blast control.'},
+ 'Motion Tracking':{cat:'Security',cost:80,req:['Improved Cameras'],desc:'Improves breach tracking.'},
+ 'Automated Turrets':{cat:'Security',cost:140,req:['Automated Lockdown','Improved Ballistics'],desc:'Unlock automated defense center.'},
+ 'Improved Ballistics':{cat:'Weapons',cost:45,req:[],desc:'Better guard and field-team combat effectiveness.'},
+ 'Armor Piercing Ammunition':{cat:'Weapons',cost:65,req:['Improved Ballistics'],desc:'Improves combat against durable threats.'},
+ 'Experimental Energy Weapons':{cat:'Weapons',cost:150,req:['Armor Piercing Ammunition'],desc:'Experimental weapons and technology lab.'},
+ 'Improved Trauma Care':{cat:'Medical',cost:40,req:[],desc:'Faster personnel recovery and lower mission fatalities.'},
+ 'Chemical Protection':{cat:'Medical',cost:65,req:['Improved Trauma Care'],desc:'Hazmat protocols and biological containment.'},
+ 'Anomalous Disease Treatment':{cat:'Medical',cost:110,req:['Chemical Protection'],desc:'Treat anomalous infections.'},
+ 'Reinforced Cells':{cat:'Containment',cost:50,req:[],desc:'Reinforced and heavy containment designs.'},
+ 'Cryogenic Systems':{cat:'Containment',cost:90,req:['Reinforced Cells'],desc:'Cryogenic containment.'},
+ 'Reality Anchors':{cat:'Anomalous Science',cost:150,req:['Reinforced Cells'],desc:'Reality stabilization technology.'},
+ 'Dimensional Stabilization':{cat:'Anomalous Science',cost:210,req:['Reality Anchors'],desc:'Improves dimensional containment.'},
+ 'Memetic Screening':{cat:'Anomalous Science',cost:100,req:[],desc:'Reduces memetic incident chance.'},
+ 'Grid Redundancy':{cat:'Site Infrastructure',cost:70,req:[],desc:'Backup generators and more reliable power.'},
+ 'Recon Drones':{cat:'Field Operations',cost:55,req:[],desc:'Unlock drone mission choices.'},
+ 'Mobile Containment Units':{cat:'Field Operations',cost:95,req:['Recon Drones'],desc:'Improves capture chance and transport safety.'},
+ 'Advanced MTF Equipment':{cat:'Field Operations',cost:140,req:['Mobile Containment Units','Improved Ballistics'],desc:'Unlock advanced response teams.'},
+ 'Omega Warhead Protocol':{cat:'Site Infrastructure',cost:250,req:['Automated Lockdown'],desc:'Unlock nuclear warhead control.'}
+}
+};
+
+const SCP_PRESETS = [
+ {id:'SCP-173',name:'The Sculpture',class:'Euclid',form:'Object',behavior:'Predatory',effect:'Rapid movement when unobserved',threat:4,research:8,breach:.10,need:'Reinforced Containment Cell',desc:'A concrete and rebar sculpture that moves lethally when not directly observed.'},
+ {id:'SCP-049',name:'Plague Doctor',class:'Euclid',form:'Humanoid',behavior:'Intelligent',effect:'Fatal touch and post-mortem alteration',threat:4,research:10,breach:.08,need:'Humanoid Containment Cell',desc:'Humanoid entity convinced it can cure an undefined pestilence.'},
+ {id:'SCP-096',name:'Shy Humanoid',class:'Euclid',form:'Humanoid',behavior:'Reactive',effect:'Extreme pursuit after facial observation',threat:5,research:12,breach:.13,need:'Reinforced Containment Cell',desc:'Normally docile humanoid that becomes catastrophically hostile when its face is observed.'},
+ {id:'SCP-939',name:'With Many Voices',class:'Keter',form:'Creature',behavior:'Predatory',effect:'Vocal mimicry',threat:5,research:14,breach:.15,need:'Heavy Containment Chamber',desc:'Predatory organisms capable of imitating human speech.'}
+];
+
+const Gen = {
+ name(){
+  return U.pick(['Ramirez','Chen','Doyle','Okafor','Kowalski','Patel','Brooks','Nguyen','Silva','Meyer','Vasquez','Kim','Morgan','Reed','Bishop','Nolan']);
+ },
+ person(role){
+  let traits=['Brave','Cowardly','Brilliant','Reckless','Loyal','Paranoid','Veteran','Calm','Observant'];
+  return {id:U.id('p'),name:(role==='D-Class'?'D-'+U.r(1000,9999):U.pick(['A.','J.','M.','R.','S.','T.'])+' '+this.name()),role,health:100,skill:U.r(35,70),xp:0,morale:U.r(60,90),loyalty:U.r(55,95),stress:U.r(5,30),trait:U.pick(traits),status:'Active'};
+ },
+ scp(){
+  let form=U.pick(['Humanoid','Creature','Object','Location','Biological','Technological','Dimensional']);
+  let behavior=U.pick(['Hostile','Passive','Reactive','Predatory','Intelligent','Unpredictable']);
+  let effect=U.pick(['Reality alteration','Memory alteration','Disease','Teleportation','Physical mutation','Mind control','Temporal distortion','Electromagnetic interference']);
+  let cls=U.pick(['Safe','Euclid','Euclid','Euclid','Keter']);
+  let need = form==='Humanoid'?'Humanoid Containment Cell':
+             effect==='Disease'?'Biological Containment':
+             effect==='Reality alteration'?'Reality Anchor Chamber':
+             cls==='Keter'?'Heavy Containment Chamber':'Basic Containment Cell';
+  return {id:'SCP-'+U.r(1000,9999),name:'Uncatalogued '+form,class:cls,form,behavior,effect,threat:cls==='Keter'?U.r(4,5):U.r(1,4),research:U.r(6,18),breach:cls==='Keter'?.14:.06+U.r(0,5)/100,need,desc:`A ${form.toLowerCase()} anomaly displaying ${behavior.toLowerCase()} behavior and signs of ${effect.toLowerCase()}.`,known:1};
+ },
+ incident(){
+  const places=['Rural Pennsylvania','Northern Maine','Nevada Desert','Suburban Ohio','Polish Industrial Zone','Coastal Oregon','Romanian Mountains','New Mexico','Quebec','Northern Japan'];
+  const reports=[
+   'An abandoned building changes internal layout each night.',
+   'Residents report voices coming from disconnected telephones.',
+   'Wildlife has begun exhibiting synchronized behavior.',
+   'A sealed shipping container is colder inside than ambient conditions permit.',
+   'Multiple people forgot the same three-hour period.',
+   'A roadside object appears in different counties on the same night.',
+   'A hospital reports impossible tissue growth in several patients.',
+   'Security footage shows a figure appearing only between frames.'
+  ];
+  return {id:U.id('m'),location:U.pick(places),report:U.pick(reports),risk:U.pick(['Unknown','Low','Moderate','High']),scp:this.scp(),status:'Available'};
+ }
+};
+
+const Game = {
+ state:null,timer:null,lastTick:0,
+ baseState(mode){
+  return {mode,difficulty:'Standard',day:1,minute:480,speed:1,tab:mode==='director'?'Site':'Map',logs:[],selected:null,
+   resources:{funding:22000,research:45,materials:110,medical:35,ammo:80,food:160,reputation:50,trust:55,ethics:60,attention:5,anomalous:0,electronics:25,chemicals:20},
+   rooms:[],personnel:[],scps:[],tech:[],missions:[],breaches:[],sector:1,mapSize:25,mtf:{'Epsilon-11':{lvl:1,xp:0,alive:5},'Beta-7':{lvl:0,xp:0,alive:0},'Eta-10':{lvl:0,xp:0,alive:0},'Mu-4':{lvl:0,xp:0,alive:0}},
+   construction:[],break:null};
+ },
+ newDirector(){
+  let s=this.baseState('director');
+  const starts=['Entrance','Security Room','Administration','Basic Armory','Medical Bay','Research Lab','Generator','Storage','Barracks','D-Class Holding','Basic Containment Cell','Basic Containment Cell'];
+  const pos=[0,1,2,5,10,11,12,15,16,20,21,22];
+  starts.forEach((t,i)=>s.rooms.push(this.mkRoom(t,pos[i])));
+  ['Researcher','Researcher','Researcher','Guard','Guard','Guard','Guard','Engineer','Engineer','Doctor','Field Agent','Field Agent','D-Class','D-Class','D-Class','D-Class'].forEach(r=>s.personnel.push(Gen.person(r)));
+  s.missions=[Gen.incident(),Gen.incident()];
+  this.state=s; this.log('You have been appointed Site Director. The facility is functional, underfunded, and suspiciously flammable.','info');
+  this.start();
+ },
+ newBreak(){
+  let s=this.baseState('break');
+  const pool=Object.keys(DATA.rooms);
+  for(let i=0;i<25;i++){
+    if(U.chance(.72)) s.rooms.push(this.mkRoom(U.pick(pool.filter(x=>x!=='Nuclear Warhead Control')),i));
+  }
+  if(!s.rooms.some(r=>r.pos===12)) s.rooms.push(this.mkRoom('Medical Bay',12));
+  let role=U.pick(['D-Class','Researcher','Guard','Engineer','Doctor','Field Agent','Anomalous Humanoid']);
+  s.break={role,pos:12,explored:[12],health:100,stamina:100,stress:15,radiation:0,infection:0,bleeding:0,
+   stats:{Strength:U.r(3,8),Agility:U.r(3,8),Intelligence:U.r(3,8),Perception:U.r(3,8),'Technical Skill':U.r(2,8),'Medical Skill':U.r(2,8),Firearms:U.r(2,8),Stealth:U.r(2,8)},
+   inventory:role==='Guard'?['Level 2 Keycard','9mm Pistol','2 Magazines','Radio']:role==='Engineer'?['Level 2 Keycard','Tool Kit','Flashlight']:role==='Doctor'?['Level 2 Keycard','Medkit','Flashlight']:role==='D-Class'?['Level 1 Keycard']:['Level 2 Keycard','Flashlight','Radio'],
+   journal:[],escaped:false};
+  // populate hazards
+  s.scps=[...SCP_PRESETS.slice(0,3).map(x=>({...x,contained:false,pos:U.r(0,24),condition:'BREACHED'})),Gen.scp()];
+  s.scps[3].contained=false;s.scps[3].pos=U.r(0,24);s.scps[3].condition='BREACHED';
+  this.state=s; this.log(`You regain consciousness during a site-wide containment failure. Assigned role: ${role}.`,'danger'); this.start();
+ },
+ mkRoom(type,pos){let d=DATA.rooms[type];return {id:U.id('r'),type,pos,level:1,condition:100,power:d.power,security:d.sec,occupants:[],scp:null,locked:false};},
+ start(){document.getElementById('title').classList.add('hidden'); clearInterval(this.timer); this.timer=setInterval(()=>this.tick(),1000); UI.render();this.save();},
+ returnTitle(){this.save();document.getElementById('title').classList.remove('hidden');},
+ speed(v){this.state.speed=v;UI.renderTop();},
+ tick(){
+  if(!this.state||this.state.speed===0)return;
+  let mins=5*this.state.speed; this.state.minute+=mins;
+  while(this.state.minute>=1440){this.state.minute-=1440;this.state.day++; this.daily();}
+  if(this.state.mode==='director') this.directorTick(mins); else this.breakTick(mins);
+  if(Date.now()-this.lastTick>5000){this.lastTick=Date.now();this.save(true);}
+  UI.render();
+ },
+ daily(){
+  if(this.state.mode==='director'){
+   let r=this.state.resources; r.funding+=Math.max(500,1400+Math.floor((r.reputation-50)*20));
+   r.food-=Math.ceil(this.state.personnel.filter(p=>p.status==='Active').length*.7);
+   r.materials-=U.r(0,2);
+   if(r.food<0){r.food=0; this.log('Food stores exhausted. Morale is deteriorating.','warn');this.state.personnel.forEach(p=>p.morale=U.clamp(p.morale-8,0,100));}
+   this.state.personnel.forEach(p=>{p.stress=U.clamp(p.stress-U.r(0,3),0,100);if(p.health<100)p.health=U.clamp(p.health+(this.hasRoom('Medical Bay')?8:3),0,100)});
+   if(U.chance(.38)) this.randomEvent();
+   if(this.state.missions.filter(m=>m.status==='Available').length<3 && U.chance(.7)) {let m=Gen.incident();this.state.missions.push(m);this.log(`New anomalous report received from ${m.location}.`,'info');}
+  }
+ },
+ directorTick(mins){
+  const s=this.state, r=s.resources;
+  let labs=s.rooms.filter(x=>x.type.includes('Lab')&&x.condition>40).length;
+  r.research+=labs*.018*mins;
+  let engineers=s.personnel.filter(p=>p.role==='Engineer'&&p.status==='Active').length;
+  if(engineers && U.chance(.03*s.speed)){let damaged=s.rooms.filter(x=>x.condition<100);if(damaged.length){let rm=U.pick(damaged);rm.condition=U.clamp(rm.condition+engineers*.35,0,100)}}
+  // construction
+  s.construction.forEach(c=>c.time-=mins); let done=s.construction.filter(c=>c.time<=0);
+  done.forEach(c=>{s.rooms.push(this.mkRoom(c.type,c.pos));this.log(`${c.type} construction completed.`,'good')});s.construction=s.construction.filter(c=>c.time>0);
+  // containment checks
+  if(U.chance(.03*s.speed)) this.containmentCheck();
+  // deterioration
+  if(U.chance(.025*s.speed)){let rm=U.pick(s.rooms);rm.condition=U.clamp(rm.condition-U.r(1,5),0,100);if(rm.condition<45)this.log(`${rm.type} condition has fallen to ${Math.floor(rm.condition)}%.`,'warn')}
+  this.breachTick();
+ },
+ breakTick(mins){
+  let b=this.state.break;
+  b.stamina=U.clamp(b.stamina+mins*.08,0,100);
+  if(b.bleeding>0)b.health=U.clamp(b.health-b.bleeding*.01*mins,0,100);
+  if(b.health<=0){this.log('You died inside the facility. The site continues failing without the courtesy of caring.','danger');this.state.speed=0}
+  if(U.chance(.025*this.state.speed)){this.moveHazards()}
+ },
+ power(){
+  let used=0,gen=0; this.state.rooms.forEach(r=>{let p=DATA.rooms[r.type].power*(1+.2*(r.level-1));if(p<0)gen+=-p;else used+=p});
+  return {used:Math.ceil(used),gen:Math.ceil(gen),ok:gen>=used};
+ },
+ hasRoom(t){return this.state.rooms.some(r=>r.type===t)},
+ hasTech(t){return this.state.tech.includes(t)},
+ log(text,severity='info'){this.state.logs.unshift({day:this.state.day,minute:this.state.minute,text,severity});this.state.logs=this.state.logs.slice(0,180)},
+ randomEvent(){
+  let choices=['power','inspection','gift','riot','sabotage','accident','discovery','strike'];
+  let e=U.pick(choices),r=this.state.resources;
+  if(e==='power'){let g=this.state.rooms.find(x=>x.type==='Generator');if(g){g.condition-=U.r(10,25);this.log('Generator fault causes unstable output. Maintenance requested.','warn')}}
+  if(e==='inspection'){let score=(r.ethics+r.reputation+r.trust)/3;if(score>58){r.trust+=3;r.funding+=1800;this.log('Foundation inspection completed with favorable remarks. Additional funding approved.','good')}else{r.trust-=4;r.funding=Math.max(0,r.funding-1000);this.log('Foundation inspection identifies serious deficiencies. Budget penalties imposed.','warn')}}
+  if(e==='gift'){r.materials+=15;r.medical+=6;this.log('A logistics convoy arrives ahead of schedule with surplus materials and medical supplies.','good')}
+  if(e==='riot'){if(this.state.personnel.filter(p=>p.role==='D-Class').length>2){this.log('D-Class disturbance reported near holding. Security is responding.','danger');r.ammo=Math.max(0,r.ammo-U.r(3,12));r.ethics-=1}}
+  if(e==='sabotage'){let rm=U.pick(this.state.rooms);rm.condition-=U.r(8,18);this.log(`Suspected sabotage damages ${rm.type}. Intelligence review opened.`,'warn')}
+  if(e==='accident'){let p=U.pick(this.state.personnel.filter(x=>x.status==='Active'));if(p){p.health-=U.r(8,30);this.log(`${p.name} injured in a research accident.`,'warn')}}
+  if(e==='discovery'){let m=Gen.incident();this.state.missions.push(m);this.log(`Intelligence flags a new anomaly report in ${m.location}.`,'info')}
+  if(e==='strike'){this.state.personnel.forEach(p=>p.morale=U.clamp(p.morale-5,0,100));this.log('Staff grievances escalate into a short work stoppage.','warn')}
+ },
+ containmentCheck(){
+  let pwr=this.power(); this.state.scps.filter(s=>s.contained).forEach(scp=>{
+   let room=this.state.rooms.find(r=>r.scp===scp.id); if(!room)return;
+   let needOk=room.type===scp.need || (DATA.rooms[room.type].cap||[]).includes(scp.class);
+   let risk=scp.breach + (100-room.condition)/350 + (pwr.ok?0:.18) + (needOk?0:.15) - room.level*.015;
+   if(U.chance(Math.max(.01,risk))){
+    scp.contained=false;scp.condition='BREACHED';scp.pos=room.pos;this.state.breaches.push({scp:scp.id,pos:room.pos,turns:0});
+    this.log(`CONTAINMENT FAILURE: ${scp.id} has breached ${room.type}.`,'danger');this.state.speed=0;
+   } else scp.condition=risk>.18?'UNSTABLE':'STABLE';
+  });
+ },
+ breachTick(){
+  if(!this.state.breaches.length)return;
+  this.state.breaches.forEach(b=>{
+   if(this.state.speed===0)return;
+   if(U.chance(.2*this.state.speed)){
+    b.turns++;let neighbors=this.neighbors(b.pos);if(neighbors.length)b.pos=U.pick(neighbors);
+    let room=this.state.rooms.find(r=>r.pos===b.pos);if(room){
+      room.condition=U.clamp(room.condition-U.r(3,15),0,100);
+      if(U.chance(.28)){let victims=this.state.personnel.filter(p=>p.status==='Active'&&p.role!=='D-Class');if(victims.length){let v=U.pick(victims);v.health-=U.r(20,80);v.stress=100;if(v.health<=0){v.status='Dead';this.log(`${v.name} was killed during the breach.`,'danger')}else this.log(`${v.name} was injured during the breach.`,'warn')}}
+      if(room.scp && U.chance(.2)){let other=this.state.scps.find(x=>x.id===room.scp&&x.contained);if(other){other.contained=false;other.condition='BREACHED';this.state.breaches.push({scp:other.id,pos:room.pos,turns:0});this.log(`CASCADING BREACH: ${other.id} has escaped.`,'danger')}}
+    }
+   }
+  });
+ },
+ neighbors(pos){let n=[];let x=pos%5,y=Math.floor(pos/5);[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{let nx=x+dx,ny=y+dy;if(nx>=0&&nx<5&&ny>=0&&ny<5)n.push(ny*5+nx)});return n},
+ build(pos,type){
+  let d=DATA.rooms[type],r=this.state.resources;if(d.unlock&&!this.hasTech(d.unlock))return;
+  if(r.funding<d.cost||r.materials<Math.ceil(d.cost/250)){this.log('Construction cancelled: insufficient funding or materials.','warn');return}
+  r.funding-=d.cost;r.materials-=Math.ceil(d.cost/250);this.state.construction.push({pos,type,time:U.r(120,300)});this.log(`Construction started: ${type}.`,'info');UI.close();UI.render();
+ },
+ upgradeRoom(id){
+  let rm=this.state.rooms.find(x=>x.id===id);let cost=900*rm.level+DATA.rooms[rm.type].cost*.35,mat=4*rm.level;
+  if(this.state.resources.funding<cost||this.state.resources.materials<mat)return;
+  this.state.resources.funding-=cost;this.state.resources.materials-=mat;rm.level++;rm.condition=100;rm.security++;this.log(`${rm.type} upgraded to Level ${rm.level}.`,'good');UI.room(rm.id);
+ },
+ research(name){
+  let t=DATA.tech[name];if(this.hasTech(name)||t.req.some(x=>!this.hasTech(x))||this.state.resources.research<t.cost)return;
+  this.state.resources.research-=t.cost;this.state.tech.push(name);this.log(`Research completed: ${name}.`,'good');UI.render();
+ },
+ hire(role){
+  let costs={Researcher:1200,Guard:900,Engineer:1000,Doctor:1300,'D-Class':250,'Field Agent':1500,'MTF Soldier':2200,'Intelligence Officer':1800};
+  if(this.state.resources.funding<(costs[role]||1000))return;
+  this.state.resources.funding-=costs[role]||1000;let p=Gen.person(role);this.state.personnel.push(p);this.log(`${p.name} hired as ${role}.`,'good');UI.render();
+ },
+ missionStart(id,team,equip=[]){
+  let m=this.state.missions.find(x=>x.id===id);if(!m||m.status!=='Available')return;
+  m.status='Active';m.team=team;m.equip=equip;m.stage=0;m.score=team==='MTF Squad'?68:team==='Security Team'?52:45;
+  if(equip.includes('Recon Drone'))m.score+=10;if(equip.includes('Hazmat'))m.score+=5;if(equip.includes('Portable Containment'))m.score+=12;
+  this.log(`${team} dispatched to ${m.location}.`,'info');UI.missionEvent(m);
+ },
+ missionChoice(id,choice){
+  let m=this.state.missions.find(x=>x.id===id);let bonus={continue:0,retreat:-999,drone:12,breachwall:-8,anchor:18}[choice]||0;
+  if(choice==='retreat'){m.status='Failed';this.log(`Team withdrew from ${m.location}. No anomaly recovered.`,'warn');UI.close();return}
+  m.stage++;
+  let roll=U.r(1,100)+m.score+bonus-(m.scp.threat*10);
+  if(m.stage<2 && roll>60){this.log(`Field team advances safely. ${m.scp.effect} indicators confirmed.`,'info');UI.missionEvent(m);return}
+  if(roll>65){
+   m.status='Captured';let scp={...m.scp,contained:false,condition:'IN TRANSIT'};this.state.scps.push(scp);this.state.resources.reputation+=2;this.state.resources.trust+=1;
+   this.log(`${scp.id} captured successfully and transported to site intake.`,'good');UI.close();UI.render();
+  }else{
+   m.status='Failed';let loss=U.r(1,2);this.state.resources.reputation-=1;this.log(`Mission failed. ${loss} personnel reported killed or missing.`,'danger');UI.close();UI.render();
+  }
+ },
+ contain(scpId,roomId){
+  let scp=this.state.scps.find(x=>x.id===scpId),rm=this.state.rooms.find(x=>x.id===roomId);
+  if(!scp||!rm||rm.scp)return;
+  rm.scp=scp.id;scp.contained=true;scp.condition='STABLE';scp.pos=rm.pos;this.state.resources.research+=scp.research;this.log(`${scp.id} assigned to ${rm.type}. Initial research yielded ${scp.research} RP.`,'good');UI.close();UI.render();
+ },
+ respondBreach(id,action){
+  let b=this.state.breaches.find(x=>x.scp===id),scp=this.state.scps.find(x=>x.id===id);if(!b)return;
+  let score=35 + this.state.personnel.filter(p=>['Guard','MTF Soldier'].includes(p.role)&&p.status==='Active').length*4;
+  if(action==='mtf')score+=this.state.mtf['Epsilon-11'].alive*8;
+  if(action==='lock')score+=this.hasTech('Automated Lockdown')?18:6;
+  if(action==='gas')score+=8;
+  if(action==='power')score+=scp.effect.includes('Electromagnetic')?15:-5;
+  score-=scp.threat*9;
+  if(U.r(1,100)<score){
+   let room=this.state.rooms.find(r=>r.type===scp.need&&!r.scp)||this.state.rooms.find(r=>(DATA.rooms[r.type].cap||[]).includes(scp.class)&&!r.scp);
+   if(room){scp.contained=true;scp.condition='STABLE';scp.pos=room.pos;room.scp=scp.id;this.state.breaches=this.state.breaches.filter(x=>x!==b);this.log(`${scp.id} recontained after emergency response.`,'good');}
+   else this.log(`${scp.id} cornered, but no suitable empty chamber exists.`,'warn');
+  }else this.log(`Emergency response against ${scp.id} failed. The anomaly remains mobile.`,'danger');
+  UI.render();
+ },
+ moveBreak(dir){
+  let b=this.state.break,x=b.pos%5,y=Math.floor(b.pos/5),nx=x,ny=y;if(dir==='N')ny--;if(dir==='S')ny++;if(dir==='E')nx++;if(dir==='W')nx--;
+  if(nx<0||nx>4||ny<0||ny>4)return;let np=ny*5+nx;
+  let room=this.state.rooms.find(r=>r.pos===np);if(!room){this.log('The corridor ends in collapsed concrete and twisted cabling.','warn');return}
+  b.pos=np;if(!b.explored.includes(np))b.explored.push(np);b.stamina=U.clamp(b.stamina-7,0,100);b.stress=U.clamp(b.stress+U.r(0,4),0,100);
+  this.log(`You enter ${room.type}.`,'info');this.encounterBreak();UI.render();
+ },
+ encounterBreak(){
+  let b=this.state.break;let hazard=this.state.scps.find(s=>!s.contained&&s.pos===b.pos);
+  if(hazard){this.log(`${hazard.id} is in this room. ${hazard.desc}`,'danger');b.stress=U.clamp(b.stress+18,0,100);}
+  else if(U.chance(.25)){let loot=U.pick(['Medkit','Flashlight','Level 2 Keycard','Level 3 Keycard','9mm Pistol','Magazine','Radio','Tool Kit']);if(!b.inventory.includes(loot)||loot==='Magazine'){b.inventory.push(loot);this.log(`You find: ${loot}.`,'good')}}
+ },
+ moveHazards(){
+  this.state.scps.filter(s=>!s.contained).forEach(s=>{let n=this.neighbors(s.pos);if(n.length)s.pos=U.pick(n);if(s.pos===this.state.break.pos){let dmg=U.r(12,35);this.state.break.health-=dmg;this.state.break.stress=U.clamp(this.state.break.stress+25,0,100);this.log(`${s.id} enters your room. You take ${dmg} damage while escaping its immediate attack.`,'danger')}})
+ },
+ breakAction(a){
+  let b=this.state.break,room=this.state.rooms.find(r=>r.pos===b.pos);
+  if(a==='search'){b.stamina-=5;this.encounterBreak()}
+  if(a==='hide'){b.stamina-=3;let stealth=b.stats.Stealth*8+U.r(1,50);if(stealth>55){this.log('You find a defensible hiding place and lower your profile.','good');b.stress=U.clamp(b.stress-8,0,100)}else this.log('There is nowhere good to hide here.','warn')}
+  if(a==='repair'){if(b.inventory.includes('Tool Kit')||b.role==='Engineer'){room.condition=U.clamp(room.condition+30,0,100);this.log(`${room.type} systems partially repaired.`,'good')}else this.log('You lack the tools to perform repairs.','warn')}
+  if(a==='medkit'){let i=b.inventory.indexOf('Medkit');if(i>=0){b.inventory.splice(i,1);b.health=U.clamp(b.health+45,0,100);b.bleeding=0;this.log('You use the medkit.','good')}}
+  if(a==='escape'){if(room.type==='Entrance'){b.escaped=true;this.state.speed=0;this.log('You reach the surface and escape the site alive. Against every statistical expectation, congratulations.','good')}else this.log('This is not an exit.','warn')}
+  UI.render();
+ },
+ save(silent=false){if(!this.state)return;localStorage.setItem('scp_site_autosave',JSON.stringify(this.state));if(!silent)this.log('Game saved to autosave.','good')},
+ saveSlot(){if(!this.state)return;localStorage.setItem('scp_site_slot1',JSON.stringify(this.state));this.log('Game saved to Slot 1.','good');UI.render()},
+ load(){let x=localStorage.getItem('scp_site_autosave');if(!x)return alert('No autosave found.');this.state=JSON.parse(x);this.start();},
+ loadSlot(){let x=localStorage.getItem('scp_site_slot1');if(!x)return alert('No Slot 1 save found.');this.state=JSON.parse(x);this.start();}
+};
+
+const UI = {
+ tabsDirector:['Site','SCPs','Personnel','Missions','Research','Construction','Logistics','Foundation','Reports'],
+ tabsBreak:['Map','Character','Inventory','Journal','Radio'],
+ render(){
+  if(!Game.state)return;this.renderTop();this.renderTabs();this.renderMap();this.renderCenter();this.renderRight();
+ },
+ renderTop(){
+  let s=Game.state;if(!s)return;document.getElementById('modeTag').textContent=s.mode==='director'?'SITE DIRECTOR':'CONTAINMENT BREAK';
+  document.getElementById('clock').textContent=`DAY ${s.day} // ${String(Math.floor(s.minute/60)).padStart(2,'0')}:${String(s.minute%60).padStart(2,'0')}`;
+  [...document.querySelectorAll('#speedBtns button')].forEach((b,i)=>b.classList.toggle('active',[0,1,2,4][i]===s.speed));
+ },
+ renderTabs(){
+  let tabs=Game.state.mode==='director'?this.tabsDirector:this.tabsBreak,el=document.getElementById('tabs');el.innerHTML='';
+  tabs.forEach(t=>{let b=document.createElement('button');b.textContent=t;b.className=Game.state.tab===t?'active':'';b.onclick=()=>{Game.state.tab=t;this.render()};el.appendChild(b)})
+ },
+ renderMap(){
+  let s=Game.state,map=document.getElementById('map');map.innerHTML='';document.getElementById('leftTitle').textContent=s.mode==='director'?'SITE MAP':'LOCAL MAP';
+  for(let i=0;i<25;i++){
+   let rm=s.rooms.find(r=>r.pos===i),c=document.createElement('div');
+   if(s.mode==='break'&&!s.break.explored.includes(i)){c.className='room empty';c.textContent='???';map.appendChild(c);continue}
+   if(!rm){c.className='room empty';c.innerHTML='+ EMPTY';if(s.mode==='director')c.onclick=()=>this.construct(i);map.appendChild(c);continue}
+   let pwr=DATA.rooms[rm.type].power;let bad=rm.condition<40?'bad':rm.condition<70?'warn':'ok';
+   c.className='room '+bad+(s.breaches.some(b=>b.pos===i)?' breachPulse':'');
+   let occ=rm.scp?rm.scp:(s.mode==='break'&&s.break.pos===i?'YOU':'');
+   c.innerHTML=`<div class="rn">${rm.type}</div><div class="meta">LV ${rm.level}<br>COND ${Math.floor(rm.condition)}%<br>PWR ${pwr<0?'+'+(-pwr):'-'+pwr}<br>SEC ${rm.security}</div><div class="occ">${occ||''}</div>`;
+   if(s.mode==='director')c.onclick=()=>this.room(rm.id);map.appendChild(c);
+  }
+  let la=document.getElementById('leftActions');la.innerHTML='';
+  if(s.mode==='director'){la.innerHTML=`<button onclick="UI.expand()">Expand Sector</button>`}
+  else{
+   ['N','W','S','E'].forEach(d=>{let b=document.createElement('button');b.textContent=d;b.onclick=()=>Game.moveBreak(d);la.appendChild(b)})
+  }
+ },
+ renderCenter(){
+  let s=Game.state,tab=s.tab,el=document.getElementById('center'),act=document.getElementById('actions');el.innerHTML='';act.innerHTML='';
+  if((s.mode==='director'&&tab==='Site')||(s.mode==='break'&&tab==='Map')){document.getElementById('centerTitle').textContent='EVENT LOG';this.logView(el);
+    if(s.mode==='director'&&s.breaches.length){s.breaches.forEach(b=>act.innerHTML+=`<button onclick="UI.breach('${b.scp}')">Respond: ${b.scp}</button>`)}
+    if(s.mode==='break'){act.innerHTML=`<button onclick="Game.breakAction('search')">Search Room</button><button onclick="Game.breakAction('hide')">Hide</button><button onclick="Game.breakAction('repair')">Repair Systems</button><button onclick="Game.breakAction('medkit')">Use Medkit</button><button onclick="Game.breakAction('escape')">Attempt Exit</button>`}
+    return;
+  }
+  document.getElementById('centerTitle').textContent=tab.toUpperCase();
+  if(tab==='SCPs')this.scps(el);
+  if(tab==='Personnel')this.people(el);
+  if(tab==='Missions')this.missions(el);
+  if(tab==='Research')this.research(el);
+  if(tab==='Construction')this.construction(el);
+  if(tab==='Logistics')this.logistics(el);
+  if(tab==='Foundation')this.foundation(el);
+  if(tab==='Reports')this.reports(el);
+  if(tab==='Character')this.character(el);
+  if(tab==='Inventory')this.inventory(el);
+  if(tab==='Journal')this.journal(el);
+  if(tab==='Radio')this.radio(el);
+ },
+ renderRight(){
+  let s=Game.state,el=document.getElementById('right');document.getElementById('rightTitle').textContent='STATUS';
+  if(s.mode==='director'){
+   let r=s.resources,p=Game.power(),alive=s.personnel.filter(x=>x.status==='Active').length;
+   el.innerHTML=`<div class="statGrid">
+   ${[['Funding','$'+U.fmt(r.funding)],['Power',p.used+'/'+p.gen],['Research',Math.floor(r.research)+' RP'],['Materials',Math.floor(r.materials)],['Medical',Math.floor(r.medical)],['Ammo',Math.floor(r.ammo)],['Food',Math.floor(r.food)],['Personnel',alive],['Reputation',Math.floor(r.reputation)],['Trust',Math.floor(r.trust)]].map(x=>`<div class="stat"><span class="small">${x[0]}</span><b>${x[1]}</b></div>`).join('')}
+   </div><div class="card" style="margin-top:8px"><h4>Power Grid</h4><div class="progress"><span style="width:${Math.min(100,p.gen?100*p.used/p.gen:100)}%"></span></div><div class="small">${p.ok?'Stable':'OVER CAPACITY - containment risk increased'}</div></div>
+   <div class="card"><h4>Active Breaches</h4>${s.breaches.length?s.breaches.map(b=>`<div class="danger">${b.scp} // map ${b.pos}</div>`).join(''):'<div class="small">None</div>'}</div>`;
+  }else{
+   let b=s.break;el.innerHTML=`<div class="statGrid">${[['Health',b.health],['Stamina',b.stamina],['Stress',b.stress],['Radiation',b.radiation],['Infection',b.infection],['Bleeding',b.bleeding]].map(x=>`<div class="stat"><span class="small">${x[0]}</span><b>${Math.max(0,Math.floor(x[1]))}</b></div>`).join('')}</div>
+   <div class="card" style="margin-top:8px"><h4>Role</h4>${b.role}</div><div class="card"><h4>Location</h4>${(s.rooms.find(r=>r.pos===b.pos)||{}).type||'Unknown'}</div>`;
+  }
+ },
+ logView(el){el.innerHTML='<div id="log">'+Game.state.logs.map(l=>`<div class="log ${l.severity}"><b>DAY ${l.day} - ${String(Math.floor(l.minute/60)).padStart(2,'0')}:${String(l.minute%60).padStart(2,'0')}</b><br>${l.text}</div>`).join('')+'</div>'},
+ scps(el){
+  let s=Game.state;if(!s.scps.length){el.innerHTML='<div class="small">No anomalies currently in Foundation custody.</div>';return}
+  s.scps.forEach(x=>{let rooms=s.rooms.filter(r=>!r.scp&&(DATA.rooms[r.type].cat==='Containment'));el.innerHTML+=`<div class="card"><div class="row"><h4 class="grow">${x.id} // ${x.name}</h4><span class="badge ${x.class.toLowerCase()}">${x.class}</span></div><div>${x.desc}</div><div class="small">Form: ${x.form} | Behavior: ${x.behavior} | Effect: ${x.effect}<br>Threat: ${x.threat}/5 | Required: ${x.need}<br>Status: ${x.condition||'UNASSIGNED'}</div>${!x.contained?`<button onclick="UI.assign('${x.id}')">Assign Containment</button>`:''}</div>`})
+ },
+ people(el){
+  let roles=['Researcher','Guard','Engineer','Doctor','D-Class','Field Agent','MTF Soldier','Intelligence Officer'];
+  el.innerHTML=`<div class="card"><h4>Recruit Personnel</h4><div class="row">${roles.map(r=>`<button onclick="Game.hire('${r}')">${r}</button>`).join('')}</div></div>`;
+  Game.state.personnel.forEach(p=>el.innerHTML+=`<div class="card"><div class="row"><h4 class="grow">${p.name}</h4><span class="badge">${p.role}</span><span class="badge">${p.status}</span></div><div class="small">Health ${Math.floor(p.health)} | Skill ${p.skill} | XP ${p.xp} | Morale ${p.morale} | Loyalty ${p.loyalty} | Stress ${p.stress}<br>Trait: ${p.trait}</div></div>`)
+ },
+ missions(el){
+  Game.state.missions.forEach(m=>el.innerHTML+=`<div class="card"><div class="row"><h4 class="grow">${m.location}</h4><span class="badge">${m.status}</span></div><div>${m.report}</div><div class="small">Risk estimate: ${m.risk}</div>${m.status==='Available'?`<button onclick="UI.mission('${m.id}')">Plan Mission</button>`:''}</div>`)
+ },
+ research(el){
+  Object.entries(DATA.tech).forEach(([n,t])=>{let done=Game.hasTech(n),locked=t.req.some(x=>!Game.hasTech(x));el.innerHTML+=`<div class="card"><div class="row"><h4 class="grow">${n}</h4><span class="badge">${t.cat}</span></div><div>${t.desc}</div><div class="small">Cost ${t.cost} RP ${t.req.length?'| Requires: '+t.req.join(', '):''}</div><button ${done||locked||Game.state.resources.research<t.cost?'disabled':''} onclick="Game.research('${n}')">${done?'Researched':locked?'Locked':'Research'}</button></div>`})
+ },
+ construction(el){
+  let active=Game.state.construction;if(!active.length)el.innerHTML='<div class="small">No active construction projects.</div>';active.forEach(c=>el.innerHTML+=`<div class="card"><h4>${c.type}</h4><div>Map position ${c.pos}</div><div class="small">${Math.ceil(c.time)} in-game minutes remaining</div></div>`)
+ },
+ logistics(el){let p=Game.power();el.innerHTML=`<div class="card"><h4>Site Power</h4>Generation ${p.gen} / Demand ${p.used}<br>${p.ok?'Grid stable.':'Demand exceeds generation. Nonessential systems are browning out.'}</div><div class="card"><h4>Supplies</h4>Food and consumables are reduced daily. Engineers slowly repair damaged rooms. Expansion without maintenance staff is how sites become very expensive tombs.</div>`},
+ foundation(el){let r=Game.state.resources;el.innerHTML=`<div class="card"><h4>Foundation Standing</h4>Trust: ${Math.floor(r.trust)}<br>Ethics approval: ${Math.floor(r.ethics)}<br>Site reputation: ${Math.floor(r.reputation)}<br>O5 attention: ${Math.floor(r.attention)}</div><div class="card"><h4>Groups of Interest</h4><div class="small">Chaos Insurgency // Hostile<br>Global Occult Coalition // Competitive<br>Serpent's Hand // Variable<br>Marshall, Carter & Dark // Opportunistic<br>Church of the Broken God // Ideological<br>Sarkic Cells // Hostile</div></div>`},
+ reports(el){this.logView(el)},
+ character(el){let b=Game.state.break;el.innerHTML=`<div class="card"><h4>${b.role}</h4>${Object.entries(b.stats).map(([k,v])=>`<div class="row"><span class="grow">${k}</span><b>${v}</b></div>`).join('')}</div>`},
+ inventory(el){let b=Game.state.break;el.innerHTML=`<div class="card"><h4>Inventory (${b.inventory.length}/12)</h4>${b.inventory.map(i=>`<div>${i}</div>`).join('')||'<span class="small">Empty</span>'}</div>`},
+ journal(el){el.innerHTML=`<div class="card"><h4>Journal</h4><div class="small">Explored rooms: ${Game.state.break.explored.length}/25<br>Goal: reach a surface exit or restore enough systems to survive.</div></div>`},
+ radio(el){el.innerHTML=`<div class="card"><h4>Radio Traffic</h4><div class="log warn">"...all surviving personnel, avoid Heavy Containment. Repeat, avoid..."</div><div class="log info">"...Epsilon-11 elements are attempting to establish a corridor to the surface..."</div><div class="log danger">"...do not respond to voices using your own name..."</div></div>`},
+ room(id){
+  let r=Game.state.rooms.find(x=>x.id===id),d=DATA.rooms[r.type],scp=Game.state.scps.find(x=>x.id===r.scp);
+  this.open(`<h2>${r.type}</h2><div class="grid2"><div class="card">Level <b>${r.level}</b><br>Condition <b>${Math.floor(r.condition)}%</b><br>Security <b>${r.security}</b></div><div class="card">Base power <b>${d.power}</b><br>Category <b>${d.cat}</b><br>Occupant <b>${scp?scp.id:'None'}</b></div></div><p>${d.desc}</p><button onclick="Game.upgradeRoom('${r.id}')">Upgrade Room</button> <button onclick="UI.close()">Close</button>`);
+ },
+ construct(pos){
+  let cats={};Object.entries(DATA.rooms).forEach(([n,d])=>{if(d.cost<=0)return;if(d.unlock&&!Game.hasTech(d.unlock))return;(cats[d.cat]??=[]).push(n)});
+  let html=`<h2>Construct at Grid ${pos}</h2><div class="small">Costs include funding and materials. Construction completes over in-game time.</div>`;
+  Object.entries(cats).forEach(([cat,arr])=>{html+=`<h3>${cat}</h3><div class="grid2">`;arr.forEach(n=>{let d=DATA.rooms[n];html+=`<button class="choice" onclick="Game.build(${pos},'${n.replaceAll("'","\\'")}')"><b>${n}</b><br><span class="small">$${U.fmt(d.cost)} | ${Math.ceil(d.cost/250)} materials | PWR ${d.power}</span></button>`});html+='</div>'});this.open(html)
+ },
+ assign(id){
+  let scp=Game.state.scps.find(x=>x.id===id),rooms=Game.state.rooms.filter(r=>!r.scp&&DATA.rooms[r.type].cat==='Containment');
+  this.open(`<h2>Assign ${scp.id}</h2><p>Recommended: <b>${scp.need}</b></p>${rooms.map(r=>`<button class="choice" onclick="Game.contain('${scp.id}','${r.id}')">${r.type} LV ${r.level} // SEC ${r.security}</button>`).join('')||'<p>No empty containment chambers.</p>'}`)
+ },
+ mission(id){
+  let m=Game.state.missions.find(x=>x.id===id);
+  this.open(`<h2>Mission Planning</h2><p><b>${m.location}</b><br>${m.report}</p><div class="small">Choose a team. Equipment bonuses are abstracted into the mission choice system.</div>
+  <button class="choice" onclick="Game.missionStart('${id}','Field Agents',['Portable Containment'])">Field Agents + Portable Containment</button>
+  <button class="choice" onclick="Game.missionStart('${id}','Security Team',['Hazmat'])">Security Team + Hazmat</button>
+  <button class="choice" onclick="Game.missionStart('${id}','MTF Squad',['Recon Drone','Portable Containment'])">MTF Squad + Drone + Containment Gear</button>`)
+ },
+ missionEvent(m){
+  this.open(`<h2>FIELD EVENT // ${m.location}</h2><p>Your team enters the anomaly zone. Radio contact degrades. A team member reports hearing a familiar voice from behind a sealed wall.</p>
+  <button class="choice" onclick="Game.missionChoice('${m.id}','continue')">1. Order the team to continue cautiously.</button>
+  <button class="choice" onclick="Game.missionChoice('${m.id}','retreat')">2. Pull the team out.</button>
+  <button class="choice" onclick="Game.missionChoice('${m.id}','drone')">3. Send a drone or remote camera ahead.</button>
+  <button class="choice" onclick="Game.missionChoice('${m.id}','breachwall')">4. Breach the wall immediately.</button>
+  <button class="choice" onclick="Game.missionChoice('${m.id}','anchor')">5. Deploy stabilization equipment and advance.</button>`)
+ },
+ breach(id){
+  let scp=Game.state.scps.find(x=>x.id===id);this.open(`<h2>BREACH RESPONSE // ${id}</h2><p>${scp.desc}</p><button class="choice" onclick="Game.respondBreach('${id}','lock');UI.close()">Lock Sector</button><button class="choice" onclick="Game.respondBreach('${id}','mtf');UI.close()">Deploy Epsilon-11</button><button class="choice" onclick="Game.respondBreach('${id}','gas');UI.close()">Release Suppression Gas</button><button class="choice" onclick="Game.respondBreach('${id}','power');UI.close()">Shut Down Local Power</button>`)
+ },
+ expand(){if(Game.state.resources.funding<12000){Game.log('Sector expansion requires $12,000 in funding.','warn');return}Game.state.resources.funding-=12000;Game.state.sector++;Game.state.resources.reputation+=3;Game.log(`New underground sector authorization granted. Sector ${Game.state.sector} comes online as future expansion capacity.`,'good');},
+ open(html){document.getElementById('modal').innerHTML=html;document.getElementById('modalWrap').style.display='flex'},
+ close(){document.getElementById('modalWrap').style.display='none'},
+};
+</script>
+</body>
+</html>
